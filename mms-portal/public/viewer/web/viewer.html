@@ -1,0 +1,2050 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <title>PDF Viewer</title>
+  <link rel="stylesheet" href="pdf_viewer.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html, body {
+      height: 100%;
+      width: 100%;
+      overflow: hidden;
+      background: #404040;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    #viewerContainer {
+      position: absolute;
+      top: 56px;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      overflow: auto;
+      background: #525659;
+    }
+
+    /* Modern thin scrollbar */
+    #viewerContainer::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+
+    #viewerContainer::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    #viewerContainer::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 4px;
+    }
+
+    #viewerContainer::-webkit-scrollbar-thumb:hover {
+      background: rgba(255, 255, 255, 0.35);
+    }
+
+    #viewerContainer::-webkit-scrollbar-corner {
+      background: transparent;
+    }
+
+    /* Firefox */
+    #viewerContainer {
+      scrollbar-width: thin;
+      scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+    }
+
+    #viewer {
+      position: relative;
+    }
+
+    #viewer .page {
+      margin: 10px auto;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+    }
+
+    /* ============================================
+       MODERN TOOLBAR DESIGN
+       ============================================ */
+    #toolbar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 56px;
+      background: linear-gradient(180deg, #2d3035 0%, #25282c 100%);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      z-index: 100;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    /* Toolbar sections */
+    .toolbar-section {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .toolbar-section.start {
+      flex: 1;
+      justify-content: flex-start;
+    }
+
+    .toolbar-section.center {
+      flex: 0 0 auto;
+    }
+
+    .toolbar-section.end {
+      flex: 1;
+      justify-content: flex-end;
+    }
+
+    /* Toolbar group with separator */
+    .toolbar-group {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      padding: 0 8px;
+      position: relative;
+    }
+
+    .toolbar-group::after {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 1px;
+      height: 24px;
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .toolbar-group:first-child::after {
+      display: none;
+    }
+
+    /* Base button style */
+    .toolbar-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 36px;
+      height: 36px;
+      padding: 0 10px;
+      background: transparent;
+      border: none;
+      border-radius: 8px;
+      color: #a0a4a8;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      font-size: 13px;
+      font-weight: 500;
+      gap: 6px;
+    }
+
+    .toolbar-btn:hover {
+      background: rgba(255, 255, 255, 0.08);
+      color: #fff;
+    }
+
+    .toolbar-btn:active {
+      background: rgba(255, 255, 255, 0.12);
+      transform: scale(0.97);
+    }
+
+    .toolbar-btn:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+    }
+
+    .toolbar-btn:disabled:hover {
+      background: transparent;
+      color: #a0a4a8;
+    }
+
+    .toolbar-btn svg {
+      width: 18px;
+      height: 18px;
+      flex-shrink: 0;
+    }
+
+    .toolbar-btn.icon-only {
+      padding: 0;
+      width: 36px;
+    }
+
+    /* Page navigation */
+    .page-nav {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(0, 0, 0, 0.2);
+      padding: 4px;
+      border-radius: 10px;
+    }
+
+    .page-nav .toolbar-btn {
+      width: 32px;
+      height: 32px;
+      min-width: 32px;
+      border-radius: 6px;
+    }
+
+    /* Flip navigation arrows in LTR mode */
+    html[dir="ltr"] .page-nav .toolbar-btn svg {
+      transform: scaleX(-1);
+    }
+
+    #pageInfo {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: #fff;
+      font-size: 13px;
+      font-weight: 500;
+      padding: 0 8px;
+      min-width: 70px;
+      justify-content: center;
+      direction: ltr;
+    }
+
+    #pageInfo .separator {
+      color: #64686c;
+    }
+
+    #currentPage {
+      color: #00AB67;
+      font-weight: 600;
+    }
+
+    /* Zoom controls */
+    .zoom-controls {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      background: rgba(0, 0, 0, 0.2);
+      padding: 4px;
+      border-radius: 10px;
+    }
+
+    .zoom-controls .toolbar-btn {
+      width: 32px;
+      height: 32px;
+      min-width: 32px;
+      border-radius: 6px;
+    }
+
+    #zoomInfo {
+      color: #fff;
+      font-size: 12px;
+      font-weight: 600;
+      min-width: 48px;
+      text-align: center;
+      padding: 0 4px;
+    }
+
+    /* Zoom dropdown */
+    .zoom-dropdown {
+      position: relative;
+    }
+
+    .zoom-dropdown-btn {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 0 8px;
+      height: 32px;
+      background: transparent;
+      border: none;
+      border-radius: 6px;
+      color: #fff;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      min-width: 70px;
+      justify-content: center;
+    }
+
+    .zoom-dropdown-btn:hover {
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .zoom-dropdown-btn svg {
+      width: 12px;
+      height: 12px;
+      color: #64686c;
+      transition: transform 0.2s ease;
+    }
+
+    .zoom-dropdown.open .zoom-dropdown-btn svg {
+      transform: rotate(180deg);
+    }
+
+    .zoom-dropdown-menu {
+      position: absolute;
+      top: calc(100% + 8px);
+      left: 50%;
+      transform: translateX(-50%);
+      background: #2d3035;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      padding: 6px;
+      min-width: 140px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+      display: none;
+      z-index: 200;
+    }
+
+    .zoom-dropdown.open .zoom-dropdown-menu {
+      display: block;
+      animation: dropdownFade 0.15s ease;
+    }
+
+    @keyframes dropdownFade {
+      from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(-8px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+      }
+    }
+
+    .zoom-option {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 12px;
+      color: #a0a4a8;
+      font-size: 13px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.1s ease;
+    }
+
+    .zoom-option:hover {
+      background: rgba(255, 255, 255, 0.08);
+      color: #fff;
+    }
+
+    .zoom-option.active {
+      background: rgba(0, 171, 103, 0.15);
+      color: #00AB67;
+    }
+
+    .zoom-option svg {
+      width: 14px;
+      height: 14px;
+      opacity: 0;
+    }
+
+    .zoom-option.active svg {
+      opacity: 1;
+    }
+
+    /* Sign button - Primary action */
+    .sign-btn {
+      background: #0d1117;
+      color: #00ae8c !important;
+      padding: 0 16px;
+      font-weight: 700;
+      border: 1px solid rgba(0, 174, 140, 0.3);
+    }
+
+    .sign-btn:hover {
+      background: #161b22;
+      border-color: #00ae8c;
+      box-shadow: 0 2px 8px rgba(0, 174, 140, 0.2);
+    }
+
+    .sign-btn svg {
+      width: 14px;
+      height: 14px;
+    }
+
+    .sign-btn:active {
+      transform: scale(0.97);
+    }
+
+    /* Feature buttons */
+    .feature-btn {
+      position: relative;
+    }
+
+    .feature-btn .tooltip {
+      position: absolute;
+      bottom: -32px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #1a1d20;
+      color: #fff;
+      font-size: 11px;
+      font-weight: 500;
+      padding: 6px 10px;
+      border-radius: 6px;
+      white-space: nowrap;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.15s ease;
+      pointer-events: none;
+      z-index: 300;
+    }
+
+    .feature-btn:hover .tooltip {
+      opacity: 1;
+      visibility: visible;
+      bottom: -36px;
+    }
+
+    /* Fullscreen button active state */
+    .toolbar-btn.fullscreen-active {
+      background: rgba(0, 171, 103, 0.15);
+      color: #00AB67;
+    }
+
+    /* Loading */
+    #loadingOverlay {
+      position: fixed;
+      top: 56px;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: #525659;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 50;
+    }
+
+    .spinner {
+      width: 48px;
+      height: 48px;
+      border: 4px solid rgba(255,255,255,0.2);
+      border-top-color: #00AB67;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    #loadingOverlay p {
+      color: #ccc;
+      margin-top: 16px;
+      font-size: 14px;
+    }
+
+    /* Error */
+    #errorOverlay {
+      position: fixed;
+      top: 56px;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: #525659;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 50;
+    }
+
+    #errorOverlay.show {
+      display: flex;
+    }
+
+    #errorOverlay svg {
+      width: 48px;
+      height: 48px;
+      color: #ef4444;
+    }
+
+    #errorOverlay p {
+      color: #ccc;
+      margin-top: 16px;
+      font-size: 14px;
+    }
+
+    /* ============================================
+       SIGNATURE STYLES
+       ============================================ */
+
+    /* Signature Overlay */
+    .signature-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(8px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 200;
+    }
+
+    .signature-overlay.show {
+      display: flex;
+    }
+
+    .signature-panel {
+      background: #ffffff;
+      border-radius: 16px;
+      border: 1px solid #e2e8f0;
+      padding: 0;
+      max-width: 440px;
+      width: 90%;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.25);
+      overflow: hidden;
+    }
+
+    .signature-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 24px;
+      background: #0d1117;
+      color: #fff;
+    }
+
+    .signature-header h3 {
+      margin: 0;
+      font-size: 15px;
+      font-weight: 700;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .signature-header h3 svg {
+      width: 18px;
+      height: 18px;
+      color: #00ae8c;
+    }
+
+    .close-signature-btn {
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255, 255, 255, 0.08);
+      border: none;
+      border-radius: 8px;
+      color: #94a3b8;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .close-signature-btn:hover {
+      background: rgba(239, 68, 68, 0.15);
+      color: #f87171;
+    }
+
+    .close-signature-btn svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    .signature-canvas-wrapper {
+      border: 2px dashed #e2e8f0;
+      border-radius: 10px;
+      overflow: hidden;
+      background: #f8fafc;
+      margin: 20px 24px 16px;
+      transition: border-color 0.2s ease;
+    }
+
+    .signature-canvas-wrapper:hover {
+      border-color: #00ae8c;
+    }
+
+    .signature-canvas-wrapper.drawing {
+      border-color: #00ae8c;
+      border-style: solid;
+      background: #fff;
+    }
+
+    #signatureCanvas {
+      display: block;
+      width: 100%;
+      height: 160px;
+      cursor: crosshair;
+      touch-action: none;
+    }
+
+    .signature-actions {
+      display: flex;
+      gap: 10px;
+      padding: 0 24px 12px;
+    }
+
+    .signature-action-btn {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 11px 16px;
+      border: none;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      font-family: inherit;
+    }
+
+    .signature-action-btn svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    .signature-action-btn.secondary {
+      background: #f1f5f9;
+      color: #475569;
+      border: 1px solid #e2e8f0;
+    }
+
+    .signature-action-btn.secondary:hover {
+      background: #e2e8f0;
+      color: #0f172a;
+    }
+
+    .signature-action-btn.primary {
+      background: #0d1117;
+      color: #00ae8c;
+      border: 1px solid rgba(0, 174, 140, 0.3);
+    }
+
+    .signature-action-btn.primary:hover:not(:disabled) {
+      border-color: #00ae8c;
+      box-shadow: 0 2px 8px rgba(0, 174, 140, 0.2);
+    }
+
+    .signature-action-btn.primary:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    .signature-hint {
+      margin: 0;
+      font-size: 12px;
+      color: #94a3b8;
+      text-align: center;
+      padding: 0 24px 18px;
+    }
+
+    /* Placement Indicator */
+    .placement-indicator {
+      position: fixed;
+      top: 70px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: none;
+      align-items: center;
+      gap: 14px;
+      padding: 14px 24px;
+      background: linear-gradient(135deg, #00AB67 0%, #009759 100%);
+      border-radius: 14px;
+      box-shadow: 0 8px 32px rgba(0, 171, 103, 0.4);
+      z-index: 150;
+      animation: slideDown 0.3s ease;
+    }
+
+    .placement-indicator.show {
+      display: flex;
+    }
+
+    @keyframes slideDown {
+      from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(-20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+      }
+    }
+
+    .placement-indicator svg {
+      width: 22px;
+      height: 22px;
+      color: #fff;
+    }
+
+    .placement-indicator span {
+      font-size: 14px;
+      font-weight: 600;
+      color: #fff;
+    }
+
+    .cancel-placement-btn {
+      padding: 8px 16px;
+      background: rgba(255, 255, 255, 0.2);
+      border: none;
+      border-radius: 8px;
+      color: #fff;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .cancel-placement-btn:hover {
+      background: rgba(255, 255, 255, 0.3);
+    }
+
+    /* Signature Preview */
+    .signature-preview {
+      position: fixed;
+      pointer-events: none;
+      z-index: 140;
+      opacity: 0.85;
+      display: none;
+      border: 2px solid #00AB67;
+      border-radius: 6px;
+      box-shadow: 0 8px 24px rgba(0, 171, 103, 0.3);
+      background: rgba(255, 255, 255, 0.95);
+      padding: 4px;
+    }
+
+    .signature-preview.show {
+      display: block;
+    }
+
+    .signature-preview img {
+      display: block;
+      max-width: 180px;
+      max-height: 90px;
+    }
+
+    /* Placement mode cursor */
+    .placement-mode #viewerContainer {
+      cursor: crosshair;
+    }
+
+    .placement-mode .page {
+      cursor: crosshair;
+      transition: box-shadow 0.2s ease;
+    }
+
+    .placement-mode .page:hover {
+      box-shadow: 0 0 0 3px rgba(0, 171, 103, 0.5), 0 2px 10px rgba(0,0,0,0.3);
+    }
+
+    /* Page signature indicator */
+    .page-signature {
+      position: absolute;
+      border: 2px dashed #00AB67;
+      background: rgba(0, 171, 103, 0.08);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 4px;
+      animation: signaturePlaced 0.3s ease;
+      transition: box-shadow 0.2s ease;
+    }
+
+    .page-signature.draggable {
+      cursor: move;
+      pointer-events: auto;
+    }
+
+    .page-signature.draggable:hover {
+      box-shadow: 0 4px 20px rgba(0, 171, 103, 0.4);
+      border-color: #00d47e;
+    }
+
+    .page-signature.dragging {
+      opacity: 0.8;
+      box-shadow: 0 8px 32px rgba(0, 171, 103, 0.5);
+      z-index: 100;
+    }
+
+    .page-signature.saved {
+      border-style: solid;
+      pointer-events: none;
+      background: rgba(0, 171, 103, 0.05);
+    }
+
+    @keyframes signaturePlaced {
+      from {
+        opacity: 0;
+        transform: scale(0.8);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    .page-signature img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+      pointer-events: none;
+    }
+
+    /* Signature Action Bar */
+    .signature-action-bar {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 20px;
+      background: linear-gradient(180deg, #2d3035 0%, #25282c 100%);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 16px;
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+      z-index: 150;
+      opacity: 0;
+      transition: all 0.3s ease;
+    }
+
+    .signature-action-bar.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+
+    .signature-action-bar .action-hint {
+      font-size: 13px;
+      color: #a0a4a8;
+      padding-left: 12px;
+      border-left: 1px solid rgba(255, 255, 255, 0.1);
+      margin-left: 4px;
+    }
+
+    .sig-action-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .sig-action-btn svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    .sig-action-btn.save {
+      background: linear-gradient(135deg, #00AB67 0%, #009759 100%);
+      color: #fff;
+      box-shadow: 0 4px 12px rgba(0, 171, 103, 0.3);
+    }
+
+    .sig-action-btn.save:hover {
+      background: linear-gradient(135deg, #00c777 0%, #00AB67 100%);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(0, 171, 103, 0.4);
+    }
+
+    .sig-action-btn.reposition {
+      background: rgba(255, 255, 255, 0.1);
+      color: #fff;
+    }
+
+    .sig-action-btn.reposition:hover {
+      background: rgba(255, 255, 255, 0.15);
+    }
+
+    .sig-action-btn.delete {
+      background: rgba(239, 68, 68, 0.15);
+      color: #ef4444;
+    }
+
+    .sig-action-btn.delete:hover {
+      background: rgba(239, 68, 68, 0.25);
+    }
+
+    /* ============================================
+       THUMBNAILS SIDEBAR
+       ============================================ */
+    #thumbnailsSidebar {
+      position: fixed;
+      top: 56px;
+      right: 0;
+      bottom: 0;
+      width: 180px;
+      background: #25282c;
+      border-left: 1px solid rgba(255, 255, 255, 0.08);
+      transform: translateX(100%);
+      transition: transform 0.3s ease;
+      z-index: 90;
+      overflow-y: auto;
+      padding: 12px;
+    }
+
+    #thumbnailsSidebar.show {
+      transform: translateX(0);
+    }
+
+    #thumbnailsSidebar::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    #thumbnailsSidebar::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 2px;
+    }
+
+    .thumbnail-item {
+      margin-bottom: 12px;
+      cursor: pointer;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 2px solid transparent;
+      transition: all 0.15s ease;
+    }
+
+    .thumbnail-item:hover {
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .thumbnail-item.active {
+      border-color: #00AB67;
+      box-shadow: 0 0 0 2px rgba(0, 171, 103, 0.2);
+    }
+
+    .thumbnail-item canvas {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+
+    .thumbnail-page-num {
+      text-align: center;
+      font-size: 11px;
+      color: #64686c;
+      padding: 6px 0;
+      background: rgba(0, 0, 0, 0.2);
+    }
+
+    .thumbnail-item.active .thumbnail-page-num {
+      color: #00AB67;
+      font-weight: 600;
+    }
+
+    /* Adjust viewer when sidebar is open */
+    body.sidebar-open #viewerContainer {
+      right: 180px;
+    }
+
+    body.sidebar-open #thumbnailsSidebar {
+      transform: translateX(0);
+    }
+  </style>
+</head>
+<body>
+  <!-- Modern Toolbar -->
+  <div id="toolbar">
+    <!-- Start Section: Sign & Actions -->
+    <div class="toolbar-section start">
+      <!-- Sign button (hidden by default) -->
+      <button class="toolbar-btn sign-btn" id="signBtn" style="display: none;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/>
+        </svg>
+        <span data-i18n="sign">Sign</span>
+      </button>
+
+      <div class="toolbar-group">
+        <!-- Download -->
+        <button class="toolbar-btn icon-only feature-btn" id="downloadBtn" data-i18n-title="download" title="Download">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="7 10 12 15 17 10"/>
+            <line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>
+          <span class="tooltip" data-i18n="download">Download</span>
+        </button>
+
+        <!-- Print -->
+        <button class="toolbar-btn icon-only feature-btn" id="printBtn" data-i18n-title="print" title="Print">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="6 9 6 2 18 2 18 9"/>
+            <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/>
+            <rect x="6" y="14" width="12" height="8"/>
+          </svg>
+          <span class="tooltip" data-i18n="print">Print</span>
+        </button>
+      </div>
+
+      <div class="toolbar-group">
+        <!-- Rotate Left -->
+        <button class="toolbar-btn icon-only feature-btn" id="rotateLeftBtn" data-i18n-title="rotateLeft" title="Rotate Left">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M2.5 2v6h6M2.66 15.57a10 10 0 1 0 .57-8.38"/>
+          </svg>
+          <span class="tooltip" data-i18n="rotateLeft">Rotate Left</span>
+        </button>
+
+        <!-- Rotate Right -->
+        <button class="toolbar-btn icon-only feature-btn" id="rotateRightBtn" data-i18n-title="rotateRight" title="Rotate Right">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38"/>
+          </svg>
+          <span class="tooltip" data-i18n="rotateRight">Rotate Right</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Center Section: Navigation & Zoom -->
+    <div class="toolbar-section center">
+      <!-- Page Navigation -->
+      <div class="page-nav">
+        <button class="toolbar-btn" id="prevPage" data-i18n-title="prevPage" title="Previous Page">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="9 18 15 12 9 6"></polyline>
+          </svg>
+        </button>
+        <div id="pageInfo">
+          <span id="currentPage">1</span>
+          <span class="separator">/</span>
+          <span id="totalPages">--</span>
+        </div>
+        <button class="toolbar-btn" id="nextPage" data-i18n-title="nextPage" title="Next Page">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="15 18 9 12 15 6"></polyline>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Zoom Controls -->
+      <div class="zoom-controls">
+        <button class="toolbar-btn" id="zoomOut" data-i18n-title="zoomOut" title="Zoom Out">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            <line x1="8" y1="11" x2="14" y2="11"></line>
+          </svg>
+        </button>
+
+        <!-- Zoom Dropdown -->
+        <div class="zoom-dropdown" id="zoomDropdown">
+          <button class="zoom-dropdown-btn" id="zoomDropdownBtn">
+            <span id="zoomInfo">100%</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </button>
+          <div class="zoom-dropdown-menu">
+            <div class="zoom-option" data-zoom="0.5">50%</div>
+            <div class="zoom-option" data-zoom="0.75">75%</div>
+            <div class="zoom-option active" data-zoom="1">100%</div>
+            <div class="zoom-option" data-zoom="1.25">125%</div>
+            <div class="zoom-option" data-zoom="1.5">150%</div>
+            <div class="zoom-option" data-zoom="2">200%</div>
+            <div class="zoom-option" data-zoom="fit-width" data-i18n="fitWidth">Fit Width</div>
+            <div class="zoom-option" data-zoom="fit-page" data-i18n="fitPage">Fit Page</div>
+          </div>
+        </div>
+
+        <button class="toolbar-btn" id="zoomIn" data-i18n-title="zoomIn" title="Zoom In">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            <line x1="11" y1="8" x2="11" y2="14"></line>
+            <line x1="8" y1="11" x2="14" y2="11"></line>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- End Section: View Options -->
+    <div class="toolbar-section end">
+      <div class="toolbar-group">
+        <!-- Thumbnails Toggle -->
+        <button class="toolbar-btn icon-only feature-btn" id="thumbnailsBtn" data-i18n-title="thumbnails" title="Thumbnails">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="7" height="7"/>
+            <rect x="14" y="3" width="7" height="7"/>
+            <rect x="14" y="14" width="7" height="7"/>
+            <rect x="3" y="14" width="7" height="7"/>
+          </svg>
+          <span class="tooltip" data-i18n="thumbnails">Thumbnails</span>
+        </button>
+
+        <!-- Fullscreen -->
+        <button class="toolbar-btn icon-only feature-btn" id="fullscreenBtn" data-i18n-title="fullscreen" title="Fullscreen">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" id="fullscreenIcon">
+            <polyline points="15 3 21 3 21 9"/>
+            <polyline points="9 21 3 21 3 15"/>
+            <line x1="21" y1="3" x2="14" y2="10"/>
+            <line x1="3" y1="21" x2="10" y2="14"/>
+          </svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" id="exitFullscreenIcon" style="display: none;">
+            <polyline points="4 14 10 14 10 20"/>
+            <polyline points="20 10 14 10 14 4"/>
+            <line x1="14" y1="10" x2="21" y2="3"/>
+            <line x1="3" y1="21" x2="10" y2="14"/>
+          </svg>
+          <span class="tooltip" data-i18n="fullscreen">Fullscreen</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div id="loadingOverlay">
+    <div class="spinner"></div>
+    <p data-i18n="loading">Loading document...</p>
+  </div>
+
+  <!-- Error -->
+  <div id="errorOverlay">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <circle cx="12" cy="12" r="10"></circle>
+      <line x1="12" y1="8" x2="12" y2="12"></line>
+      <line x1="12" y1="16" x2="12.01" y2="16"></line>
+    </svg>
+    <p id="errorMessage" data-i18n="loadError">Failed to load document</p>
+  </div>
+
+  <!-- Signature Overlay -->
+  <div id="signatureOverlay" class="signature-overlay">
+    <div class="signature-panel">
+      <div class="signature-header">
+        <h3>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/>
+          </svg>
+          <span data-i18n="drawSignature">Draw your signature</span>
+        </h3>
+        <button type="button" id="closeSignature" class="close-signature-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M18 6L6 18M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+      <div class="signature-canvas-wrapper" id="canvasWrapper">
+        <canvas id="signatureCanvas" width="360" height="160"></canvas>
+      </div>
+      <div class="signature-actions">
+        <button type="button" id="clearSignature" class="signature-action-btn secondary">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
+          </svg>
+          <span data-i18n="clear">Clear</span>
+        </button>
+        <button type="button" id="confirmSignature" class="signature-action-btn primary" disabled>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M20 6L9 17l-5-5"/>
+          </svg>
+          <span data-i18n="confirmPlace">Confirm & Place</span>
+        </button>
+      </div>
+      <p class="signature-hint" data-i18n="signHint">Draw your signature then click confirm to place it</p>
+    </div>
+  </div>
+
+  <!-- Placement Mode Indicator -->
+  <div id="placementIndicator" class="placement-indicator">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/>
+    </svg>
+    <span data-i18n="clickToPlace">Click on the document to place the signature</span>
+    <button type="button" id="cancelPlacement" class="cancel-placement-btn" data-i18n="cancel">Cancel</button>
+  </div>
+
+  <!-- Signature Preview (follows mouse) -->
+  <div id="signaturePreview" class="signature-preview"></div>
+
+  <!-- Signature Action Bar (shown after placing signature) -->
+  <div id="signatureActionBar" class="signature-action-bar">
+    <button type="button" id="saveSignature" class="sig-action-btn save">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M20 6L9 17l-5-5"/>
+      </svg>
+      <span data-i18n="saveSignature">Save</span>
+    </button>
+    <button type="button" id="repositionSignature" class="sig-action-btn reposition">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M5 9l-3 3 3 3M9 5l3-3 3 3M15 19l-3 3-3-3M19 9l3 3-3 3M2 12h20M12 2v20"/>
+      </svg>
+      <span data-i18n="reposition">Reposition</span>
+    </button>
+    <button type="button" id="deleteSignature" class="sig-action-btn delete">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
+      </svg>
+      <span data-i18n="deleteSign">Delete</span>
+    </button>
+    <span class="action-hint" data-i18n="dragHint">Drag the signature to reposition</span>
+  </div>
+
+  <!-- Thumbnails Sidebar -->
+  <div id="thumbnailsSidebar"></div>
+
+  <!-- PDF Container -->
+  <div id="viewerContainer">
+    <div id="viewer" class="pdfViewer"></div>
+  </div>
+
+  <script src="../build/pdf.min.js"></script>
+  <script>
+    // Set worker path
+    pdfjsLib.GlobalWorkerOptions.workerSrc = '../build/pdf.worker.min.js';
+
+    // Get URL parameters
+    const params = new URLSearchParams(window.location.search);
+    const fileUrl = params.get('file');
+    const initialZoom = params.get('zoom');
+    const locale = params.get('locale') || 'ar';
+    const isRtl = locale === 'ar';
+
+    // Set document direction
+    document.documentElement.lang = locale === 'ar' ? 'ar' : 'en';
+    document.documentElement.dir = isRtl ? 'rtl' : 'ltr';
+
+    // i18n translations
+    const i18n = {
+      ar: {
+        sign: 'توقيع', download: 'تحميل', print: 'طباعة',
+        rotateLeft: 'تدوير لليسار', rotateRight: 'تدوير لليمين',
+        prevPage: 'الصفحة السابقة', nextPage: 'الصفحة التالية',
+        zoomIn: 'تكبير', zoomOut: 'تصغير',
+        fitWidth: 'ملائمة العرض', fitPage: 'ملائمة الصفحة',
+        thumbnails: 'الصفحات المصغرة', fullscreen: 'ملء الشاشة',
+        loading: 'جاري تحميل المستند...', loadError: 'فشل تحميل المستند',
+        noFile: 'لم يتم تحديد ملف PDF',
+        drawSignature: 'ارسم توقيعك', clear: 'مسح',
+        confirmPlace: 'تأكيد ووضع التوقيع',
+        signHint: 'ارسم توقيعك ثم اضغط تأكيد لوضعه على المستند',
+        clickToPlace: 'انقر على المستند لوضع التوقيع',
+        cancel: 'إلغاء', saveSignature: 'حفظ',
+        reposition: 'إعادة الوضع', deleteSign: 'حذف',
+        dragHint: 'اسحب التوقيع لتغيير موضعه'
+      },
+      en: {
+        sign: 'Sign', download: 'Download', print: 'Print',
+        rotateLeft: 'Rotate Left', rotateRight: 'Rotate Right',
+        prevPage: 'Previous Page', nextPage: 'Next Page',
+        zoomIn: 'Zoom In', zoomOut: 'Zoom Out',
+        fitWidth: 'Fit Width', fitPage: 'Fit Page',
+        thumbnails: 'Thumbnails', fullscreen: 'Fullscreen',
+        loading: 'Loading document...', loadError: 'Failed to load document',
+        noFile: 'No PDF file specified',
+        drawSignature: 'Draw your signature', clear: 'Clear',
+        confirmPlace: 'Confirm & Place',
+        signHint: 'Draw your signature then click confirm to place it',
+        clickToPlace: 'Click on the document to place the signature',
+        cancel: 'Cancel', saveSignature: 'Save',
+        reposition: 'Reposition', deleteSign: 'Delete',
+        dragHint: 'Drag the signature to reposition'
+      }
+    };
+    const t = i18n[isRtl ? 'ar' : 'en'] || i18n.en;
+
+    // Apply translations to data-i18n elements (run immediately — DOM is ready since script is at bottom)
+    function applyTranslations() {
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (t[key]) el.textContent = t[key];
+      });
+      document.querySelectorAll('[data-i18n-title]').forEach(el => {
+        const key = el.getAttribute('data-i18n-title');
+        if (t[key]) el.title = t[key];
+      });
+    }
+    applyTranslations();
+
+    // State
+    let pdfDoc = null;
+    let currentPage = 1;
+    let totalPages = 0;
+    let scale = 1.0;
+    let rotation = 0;
+    let pageCanvases = [];
+    let pageElements = [];
+    let fitMode = null; // 'width', 'page', or null
+
+    // DOM elements
+    const viewerContainer = document.getElementById('viewerContainer');
+    const viewer = document.getElementById('viewer');
+    const loadingOverlay = document.getElementById('loadingOverlay');
+    const errorOverlay = document.getElementById('errorOverlay');
+    const errorMessage = document.getElementById('errorMessage');
+    const currentPageEl = document.getElementById('currentPage');
+    const totalPagesEl = document.getElementById('totalPages');
+    const zoomInfo = document.getElementById('zoomInfo');
+    const prevPageBtn = document.getElementById('prevPage');
+    const nextPageBtn = document.getElementById('nextPage');
+    const zoomInBtn = document.getElementById('zoomIn');
+    const zoomOutBtn = document.getElementById('zoomOut');
+
+    // Feature buttons
+    const downloadBtn = document.getElementById('downloadBtn');
+    const printBtn = document.getElementById('printBtn');
+    const rotateLeftBtn = document.getElementById('rotateLeftBtn');
+    const rotateRightBtn = document.getElementById('rotateRightBtn');
+    const fullscreenBtn = document.getElementById('fullscreenBtn');
+    const thumbnailsBtn = document.getElementById('thumbnailsBtn');
+    const thumbnailsSidebar = document.getElementById('thumbnailsSidebar');
+
+    // Zoom dropdown
+    const zoomDropdown = document.getElementById('zoomDropdown');
+    const zoomDropdownBtn = document.getElementById('zoomDropdownBtn');
+    const zoomOptions = document.querySelectorAll('.zoom-option');
+
+    // Show error
+    function showError(message) {
+      loadingOverlay.style.display = 'none';
+      errorMessage.textContent = message;
+      errorOverlay.classList.add('show');
+    }
+
+    // Calculate fit scale
+    function calculateFitScale(fitType) {
+      if (!pdfDoc) return 1;
+      const containerWidth = viewerContainer.clientWidth - 40;
+      const containerHeight = viewerContainer.clientHeight - 40;
+
+      // Get first page dimensions
+      return pdfDoc.getPage(1).then(page => {
+        const viewport = page.getViewport({ scale: 1, rotation: rotation });
+
+        if (fitType === 'width') {
+          return containerWidth / viewport.width;
+        } else if (fitType === 'page') {
+          const scaleWidth = containerWidth / viewport.width;
+          const scaleHeight = containerHeight / viewport.height;
+          return Math.min(scaleWidth, scaleHeight);
+        }
+        return 1;
+      });
+    }
+
+    // Render single page to canvas
+    async function renderPageToCanvas(pageNum, canvas) {
+      try {
+        const page = await pdfDoc.getPage(pageNum);
+        const viewport = page.getViewport({ scale: scale, rotation: rotation });
+
+        const context = canvas.getContext('2d');
+        canvas.width = Math.floor(viewport.width);
+        canvas.height = Math.floor(viewport.height);
+        canvas.parentElement.style.width = viewport.width + 'px';
+        canvas.parentElement.style.height = viewport.height + 'px';
+
+        await page.render({
+          canvasContext: context,
+          viewport: viewport
+        }).promise;
+
+      } catch (err) {
+        console.error('Render error page', pageNum, ':', err);
+      }
+    }
+
+    // Render all pages
+    async function renderAllPages() {
+      viewer.innerHTML = '';
+      pageCanvases = [];
+      pageElements = [];
+
+      for (let i = 1; i <= totalPages; i++) {
+        const pageDiv = document.createElement('div');
+        pageDiv.className = 'page';
+        pageDiv.dataset.pageNumber = i;
+
+        const canvas = document.createElement('canvas');
+        pageDiv.appendChild(canvas);
+        viewer.appendChild(pageDiv);
+
+        pageCanvases.push(canvas);
+        pageElements.push(pageDiv);
+      }
+
+      const renderPromises = [];
+      for (let i = 0; i < totalPages; i++) {
+        renderPromises.push(renderPageToCanvas(i + 1, pageCanvases[i]));
+      }
+      await Promise.all(renderPromises);
+
+      updateZoomInfo();
+      renderThumbnails();
+    }
+
+    // Update current page based on scroll
+    function updateCurrentPage() {
+      const containerRect = viewerContainer.getBoundingClientRect();
+      const containerCenter = containerRect.top + containerRect.height / 2;
+
+      for (let i = 0; i < pageElements.length; i++) {
+        const pageRect = pageElements[i].getBoundingClientRect();
+        if (pageRect.top <= containerCenter && pageRect.bottom >= containerCenter) {
+          currentPage = i + 1;
+          currentPageEl.textContent = currentPage;
+          updateButtons();
+          updateThumbnailsHighlight();
+          break;
+        }
+      }
+    }
+
+    // Scroll to page
+    function scrollToPage(pageNum) {
+      if (pageNum < 1 || pageNum > totalPages) return;
+      const pageEl = pageElements[pageNum - 1];
+      if (pageEl) {
+        pageEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
+
+    // Update button states
+    function updateButtons() {
+      prevPageBtn.disabled = currentPage <= 1;
+      nextPageBtn.disabled = currentPage >= totalPages;
+    }
+
+    // Update zoom info
+    function updateZoomInfo() {
+      zoomInfo.textContent = Math.round(scale * 100) + '%';
+
+      // Update dropdown active state
+      zoomOptions.forEach(opt => {
+        opt.classList.remove('active');
+        const zoomVal = opt.dataset.zoom;
+        if (zoomVal === fitMode || (fitMode === null && parseFloat(zoomVal) === scale)) {
+          opt.classList.add('active');
+        }
+      });
+    }
+
+    // Navigation
+    prevPageBtn.addEventListener('click', () => {
+      if (currentPage > 1) scrollToPage(currentPage - 1);
+    });
+
+    nextPageBtn.addEventListener('click', () => {
+      if (currentPage < totalPages) scrollToPage(currentPage + 1);
+    });
+
+    // Zoom
+    zoomInBtn.addEventListener('click', async () => {
+      fitMode = null;
+      scale = Math.min(scale + 0.25, 4);
+      await renderAllPages();
+    });
+
+    zoomOutBtn.addEventListener('click', async () => {
+      fitMode = null;
+      scale = Math.max(scale - 0.25, 0.25);
+      await renderAllPages();
+    });
+
+    // Zoom dropdown
+    zoomDropdownBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      zoomDropdown.classList.toggle('open');
+    });
+
+    document.addEventListener('click', () => {
+      zoomDropdown.classList.remove('open');
+    });
+
+    zoomOptions.forEach(opt => {
+      opt.addEventListener('click', async () => {
+        const zoomVal = opt.dataset.zoom;
+        zoomDropdown.classList.remove('open');
+
+        if (zoomVal === 'fit-width') {
+          fitMode = 'width';
+          scale = await calculateFitScale('width');
+        } else if (zoomVal === 'fit-page') {
+          fitMode = 'page';
+          scale = await calculateFitScale('page');
+        } else {
+          fitMode = null;
+          scale = parseFloat(zoomVal);
+        }
+
+        await renderAllPages();
+      });
+    });
+
+    // Scroll listener
+    viewerContainer.addEventListener('scroll', () => {
+      updateCurrentPage();
+    });
+
+    // Keyboard navigation
+    document.addEventListener('keydown', (e) => {
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+      if (e.key === '+' || e.key === '=') {
+        e.preventDefault();
+        fitMode = null;
+        scale = Math.min(scale + 0.25, 4);
+        renderAllPages();
+      } else if (e.key === '-') {
+        e.preventDefault();
+        fitMode = null;
+        scale = Math.max(scale - 0.25, 0.25);
+        renderAllPages();
+      } else if (e.key === 'ArrowLeft') {
+        if (currentPage > 1) scrollToPage(currentPage - 1);
+      } else if (e.key === 'ArrowRight') {
+        if (currentPage < totalPages) scrollToPage(currentPage + 1);
+      }
+    });
+
+    // ============================================
+    // FEATURE IMPLEMENTATIONS
+    // ============================================
+
+    // Download
+    downloadBtn.addEventListener('click', () => {
+      if (fileUrl) {
+        const link = document.createElement('a');
+        link.href = fileUrl;
+        link.download = 'document.pdf';
+        link.click();
+      }
+    });
+
+    // Print
+    printBtn.addEventListener('click', () => {
+      window.print();
+    });
+
+    // Rotate
+    rotateLeftBtn.addEventListener('click', async () => {
+      rotation = (rotation - 90 + 360) % 360;
+      await renderAllPages();
+    });
+
+    rotateRightBtn.addEventListener('click', async () => {
+      rotation = (rotation + 90) % 360;
+      await renderAllPages();
+    });
+
+    // Fullscreen
+    const fullscreenIcon = document.getElementById('fullscreenIcon');
+    const exitFullscreenIcon = document.getElementById('exitFullscreenIcon');
+
+    fullscreenBtn.addEventListener('click', () => {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen();
+      } else {
+        document.exitFullscreen();
+      }
+    });
+
+    document.addEventListener('fullscreenchange', () => {
+      if (document.fullscreenElement) {
+        fullscreenIcon.style.display = 'none';
+        exitFullscreenIcon.style.display = 'block';
+        fullscreenBtn.classList.add('fullscreen-active');
+      } else {
+        fullscreenIcon.style.display = 'block';
+        exitFullscreenIcon.style.display = 'none';
+        fullscreenBtn.classList.remove('fullscreen-active');
+      }
+    });
+
+    // Thumbnails
+    let thumbnailsVisible = false;
+
+    thumbnailsBtn.addEventListener('click', () => {
+      thumbnailsVisible = !thumbnailsVisible;
+      document.body.classList.toggle('sidebar-open', thumbnailsVisible);
+      thumbnailsSidebar.classList.toggle('show', thumbnailsVisible);
+      thumbnailsBtn.classList.toggle('fullscreen-active', thumbnailsVisible);
+    });
+
+    async function renderThumbnails() {
+      if (!pdfDoc) return;
+
+      thumbnailsSidebar.innerHTML = '';
+
+      for (let i = 1; i <= totalPages; i++) {
+        const page = await pdfDoc.getPage(i);
+        const viewport = page.getViewport({ scale: 0.2, rotation: rotation });
+
+        const thumbDiv = document.createElement('div');
+        thumbDiv.className = 'thumbnail-item' + (i === currentPage ? ' active' : '');
+        thumbDiv.dataset.page = i;
+
+        const canvas = document.createElement('canvas');
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
+
+        const context = canvas.getContext('2d');
+        await page.render({
+          canvasContext: context,
+          viewport: viewport
+        }).promise;
+
+        const pageNum = document.createElement('div');
+        pageNum.className = 'thumbnail-page-num';
+        pageNum.textContent = i;
+
+        thumbDiv.appendChild(canvas);
+        thumbDiv.appendChild(pageNum);
+        thumbnailsSidebar.appendChild(thumbDiv);
+
+        thumbDiv.addEventListener('click', () => {
+          scrollToPage(i);
+        });
+      }
+    }
+
+    function updateThumbnailsHighlight() {
+      const items = thumbnailsSidebar.querySelectorAll('.thumbnail-item');
+      items.forEach((item, idx) => {
+        item.classList.toggle('active', idx + 1 === currentPage);
+      });
+    }
+
+    // ============================================
+    // LOAD PDF
+    // ============================================
+    async function loadPdf() {
+      if (!fileUrl) {
+        showError(t.noFile);
+        return;
+      }
+
+      try {
+        console.log('[Viewer] Loading PDF:', fileUrl);
+
+        const loadingTask = pdfjsLib.getDocument(fileUrl);
+        pdfDoc = await loadingTask.promise;
+        totalPages = pdfDoc.numPages;
+
+        console.log('[Viewer] PDF loaded, pages:', totalPages);
+
+        totalPagesEl.textContent = totalPages;
+        loadingOverlay.style.display = 'none';
+
+        // Handle initial zoom
+        if (initialZoom) {
+          const zoomNum = parseInt(initialZoom);
+          if (!isNaN(zoomNum)) {
+            scale = zoomNum / 100;
+          }
+        }
+
+        await renderAllPages();
+        updateCurrentPage();
+
+      } catch (err) {
+        console.error('[Viewer] Load error:', err);
+        showError(err.message || t.loadError);
+      }
+    }
+
+    // Start
+    loadPdf();
+
+    // ============================================
+    // SIGNATURE FUNCTIONALITY
+    // ============================================
+
+    const canSign = params.get('sign') === 'true';
+
+    let signatureDataUrl = null;
+    let isPlacementMode = false;
+    let hasDrawn = false;
+    let isDrawing = false;
+    let lastX = 0;
+    let lastY = 0;
+
+    // Placed signature state
+    let placedSignatureEl = null;
+    let placedSignatureData = null;
+    let isDraggingSignature = false;
+    let dragOffsetX = 0;
+    let dragOffsetY = 0;
+
+    const signBtn = document.getElementById('signBtn');
+    const signatureOverlay = document.getElementById('signatureOverlay');
+    const signatureCanvas = document.getElementById('signatureCanvas');
+    const canvasWrapper = document.getElementById('canvasWrapper');
+    const closeSignatureBtn = document.getElementById('closeSignature');
+    const clearSignatureBtn = document.getElementById('clearSignature');
+    const confirmSignatureBtn = document.getElementById('confirmSignature');
+    const placementIndicator = document.getElementById('placementIndicator');
+    const cancelPlacementBtn = document.getElementById('cancelPlacement');
+    const signaturePreview = document.getElementById('signaturePreview');
+    const signatureActionBar = document.getElementById('signatureActionBar');
+    const saveSignatureBtn = document.getElementById('saveSignature');
+    const repositionSignatureBtn = document.getElementById('repositionSignature');
+    const deleteSignatureBtn = document.getElementById('deleteSignature');
+
+    if (canSign) {
+      signBtn.style.display = 'flex';
+    }
+
+    const sigCtx = signatureCanvas.getContext('2d');
+
+    function initSignatureCanvas() {
+      sigCtx.strokeStyle = '#000';
+      sigCtx.lineWidth = 2.5;
+      sigCtx.lineCap = 'round';
+      sigCtx.lineJoin = 'round';
+      sigCtx.fillStyle = '#fff';
+      sigCtx.fillRect(0, 0, signatureCanvas.width, signatureCanvas.height);
+      canvasWrapper.classList.remove('drawing');
+    }
+    initSignatureCanvas();
+
+    signBtn.addEventListener('click', () => {
+      signatureOverlay.classList.add('show');
+      initSignatureCanvas();
+      hasDrawn = false;
+      confirmSignatureBtn.disabled = true;
+    });
+
+    closeSignatureBtn.addEventListener('click', () => {
+      signatureOverlay.classList.remove('show');
+    });
+
+    clearSignatureBtn.addEventListener('click', () => {
+      initSignatureCanvas();
+      hasDrawn = false;
+      confirmSignatureBtn.disabled = true;
+    });
+
+    // Drawing
+    signatureCanvas.addEventListener('mousedown', (e) => {
+      isDrawing = true;
+      canvasWrapper.classList.add('drawing');
+      const rect = signatureCanvas.getBoundingClientRect();
+      lastX = (e.clientX - rect.left) * (signatureCanvas.width / rect.width);
+      lastY = (e.clientY - rect.top) * (signatureCanvas.height / rect.height);
+    });
+
+    signatureCanvas.addEventListener('mousemove', (e) => {
+      if (!isDrawing) return;
+      hasDrawn = true;
+      confirmSignatureBtn.disabled = false;
+      const rect = signatureCanvas.getBoundingClientRect();
+      const x = (e.clientX - rect.left) * (signatureCanvas.width / rect.width);
+      const y = (e.clientY - rect.top) * (signatureCanvas.height / rect.height);
+
+      sigCtx.beginPath();
+      sigCtx.moveTo(lastX, lastY);
+      sigCtx.lineTo(x, y);
+      sigCtx.stroke();
+
+      lastX = x;
+      lastY = y;
+    });
+
+    signatureCanvas.addEventListener('mouseup', () => {
+      isDrawing = false;
+    });
+
+    signatureCanvas.addEventListener('mouseleave', () => {
+      isDrawing = false;
+    });
+
+    // Touch
+    signatureCanvas.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      isDrawing = true;
+      canvasWrapper.classList.add('drawing');
+      const touch = e.touches[0];
+      const rect = signatureCanvas.getBoundingClientRect();
+      lastX = (touch.clientX - rect.left) * (signatureCanvas.width / rect.width);
+      lastY = (touch.clientY - rect.top) * (signatureCanvas.height / rect.height);
+    });
+
+    signatureCanvas.addEventListener('touchmove', (e) => {
+      e.preventDefault();
+      if (!isDrawing) return;
+      hasDrawn = true;
+      confirmSignatureBtn.disabled = false;
+      const touch = e.touches[0];
+      const rect = signatureCanvas.getBoundingClientRect();
+      const x = (touch.clientX - rect.left) * (signatureCanvas.width / rect.width);
+      const y = (touch.clientY - rect.top) * (signatureCanvas.height / rect.height);
+
+      sigCtx.beginPath();
+      sigCtx.moveTo(lastX, lastY);
+      sigCtx.lineTo(x, y);
+      sigCtx.stroke();
+
+      lastX = x;
+      lastY = y;
+    });
+
+    signatureCanvas.addEventListener('touchend', () => {
+      isDrawing = false;
+    });
+
+    confirmSignatureBtn.addEventListener('click', () => {
+      if (!hasDrawn) return;
+      signatureDataUrl = signatureCanvas.toDataURL('image/png');
+      signatureOverlay.classList.remove('show');
+      enterPlacementMode();
+    });
+
+    function enterPlacementMode() {
+      isPlacementMode = true;
+      document.body.classList.add('placement-mode');
+      placementIndicator.classList.add('show');
+
+      const previewImg = document.createElement('img');
+      previewImg.src = signatureDataUrl;
+      signaturePreview.innerHTML = '';
+      signaturePreview.appendChild(previewImg);
+    }
+
+    function exitPlacementMode(clearSignature = true) {
+      isPlacementMode = false;
+      document.body.classList.remove('placement-mode');
+      placementIndicator.classList.remove('show');
+      signaturePreview.classList.remove('show');
+      // Only clear signature data if explicitly requested (e.g., cancel button)
+      if (clearSignature) {
+        signatureDataUrl = null;
+      }
+    }
+
+    cancelPlacementBtn.addEventListener('click', () => {
+      exitPlacementMode();
+      // Notify parent that signature was cancelled
+      if (window.parent !== window) {
+        window.parent.postMessage({ type: 'signature-cancelled' }, '*');
+      }
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        if (isPlacementMode) {
+          exitPlacementMode();
+          // Notify parent that signature was cancelled
+          if (window.parent !== window) {
+            window.parent.postMessage({ type: 'signature-cancelled' }, '*');
+          }
+        } else if (signatureOverlay.classList.contains('show')) {
+          signatureOverlay.classList.remove('show');
+        }
+      }
+    });
+
+    document.addEventListener('mousemove', (e) => {
+      if (!isPlacementMode) return;
+
+      const pageElement = e.target.closest('.page');
+      if (pageElement) {
+        signaturePreview.classList.add('show');
+        signaturePreview.style.left = (e.clientX + 15) + 'px';
+        signaturePreview.style.top = (e.clientY + 15) + 'px';
+      } else {
+        signaturePreview.classList.remove('show');
+      }
+    });
+
+    viewerContainer.addEventListener('click', (e) => {
+      if (!isPlacementMode) return;
+
+      const pageElement = e.target.closest('.page');
+      if (!pageElement) return;
+
+      const pageNum = parseInt(pageElement.dataset.pageNumber);
+      const pageRect = pageElement.getBoundingClientRect();
+      const canvas = pageElement.querySelector('canvas');
+
+      if (!canvas) return;
+
+      const clickX = e.clientX - pageRect.left;
+      const clickY = e.clientY - pageRect.top;
+
+      const sigWidth = 180;
+      const sigHeight = 90;
+
+      console.log('[Viewer] Signature placed at:', { pageNum, clickX, clickY });
+
+      // Create draggable signature element
+      const sigDiv = document.createElement('div');
+      sigDiv.className = 'page-signature draggable';
+      sigDiv.style.left = clickX + 'px';
+      sigDiv.style.top = clickY + 'px';
+      sigDiv.style.width = sigWidth + 'px';
+      sigDiv.style.height = sigHeight + 'px';
+
+      const sigImg = document.createElement('img');
+      sigImg.src = signatureDataUrl;
+      sigDiv.appendChild(sigImg);
+      pageElement.appendChild(sigDiv);
+
+      // Store reference and data
+      placedSignatureEl = sigDiv;
+      placedSignatureData = {
+        pageElement,
+        pageNum,
+        sigWidth,
+        sigHeight
+      };
+
+      // Exit placement mode but show action bar (keep signature data for saving)
+      exitPlacementMode(false);
+      signatureActionBar.classList.add('show');
+
+      // Setup dragging
+      setupSignatureDrag(sigDiv, pageElement);
+    });
+
+    // Setup drag functionality for signature
+    function setupSignatureDrag(sigEl, pageEl) {
+      sigEl.addEventListener('mousedown', (e) => {
+        if (!sigEl.classList.contains('draggable')) return;
+        e.preventDefault();
+        e.stopPropagation();
+
+        isDraggingSignature = true;
+        sigEl.classList.add('dragging');
+
+        const sigRect = sigEl.getBoundingClientRect();
+        dragOffsetX = e.clientX - sigRect.left;
+        dragOffsetY = e.clientY - sigRect.top;
+      });
+    }
+
+    document.addEventListener('mousemove', (e) => {
+      if (!isDraggingSignature || !placedSignatureEl || !placedSignatureData) return;
+
+      const pageEl = placedSignatureData.pageElement;
+      const pageRect = pageEl.getBoundingClientRect();
+
+      let newX = e.clientX - pageRect.left - dragOffsetX;
+      let newY = e.clientY - pageRect.top - dragOffsetY;
+
+      // Constrain to page bounds
+      newX = Math.max(0, Math.min(newX, pageRect.width - placedSignatureData.sigWidth));
+      newY = Math.max(0, Math.min(newY, pageRect.height - placedSignatureData.sigHeight));
+
+      placedSignatureEl.style.left = newX + 'px';
+      placedSignatureEl.style.top = newY + 'px';
+    });
+
+    document.addEventListener('mouseup', () => {
+      if (isDraggingSignature && placedSignatureEl) {
+        placedSignatureEl.classList.remove('dragging');
+      }
+      isDraggingSignature = false;
+    });
+
+    // Save signature button
+    saveSignatureBtn.addEventListener('click', () => {
+      if (!placedSignatureEl || !placedSignatureData) return;
+
+      const pageEl = placedSignatureData.pageElement;
+      const pageRect = pageEl.getBoundingClientRect();
+
+      const currentX = parseFloat(placedSignatureEl.style.left);
+      const currentY = parseFloat(placedSignatureEl.style.top);
+
+      const xPercent = currentX / pageRect.width;
+      const yPercent = currentY / pageRect.height;
+      const widthPercent = placedSignatureData.sigWidth / pageRect.width;
+      const heightPercent = placedSignatureData.sigHeight / pageRect.height;
+
+      console.log('[Viewer] Saving signature:', {
+        pageNum: placedSignatureData.pageNum,
+        xPercent, yPercent, widthPercent, heightPercent
+      });
+
+      // Mark as saved
+      placedSignatureEl.classList.remove('draggable');
+      placedSignatureEl.classList.add('saved');
+      signatureActionBar.classList.remove('show');
+
+      // Send to parent
+      if (window.parent !== window) {
+        window.parent.postMessage({
+          type: 'signature-placed',
+          data: {
+            signatureImage: signatureDataUrl,
+            pageIndex: placedSignatureData.pageNum - 1,
+            xPercent,
+            yPercent,
+            widthPercent,
+            heightPercent,
+            clickX: currentX,
+            clickY: currentY,
+            pageWidth: pageRect.width,
+            pageHeight: pageRect.height,
+            scale
+          }
+        }, '*');
+      }
+
+      // Hide sign button after saving
+      signBtn.style.display = 'none';
+
+      // Clear state
+      placedSignatureEl = null;
+      placedSignatureData = null;
+      signatureDataUrl = null;
+    });
+
+    // Reposition button - go back to placement mode with current signature
+    repositionSignatureBtn.addEventListener('click', () => {
+      if (placedSignatureEl) {
+        placedSignatureEl.remove();
+        placedSignatureEl = null;
+        placedSignatureData = null;
+      }
+      signatureActionBar.classList.remove('show');
+      enterPlacementMode();
+    });
+
+    // Delete signature button
+    deleteSignatureBtn.addEventListener('click', () => {
+      if (placedSignatureEl) {
+        placedSignatureEl.remove();
+        placedSignatureEl = null;
+        placedSignatureData = null;
+      }
+      signatureActionBar.classList.remove('show');
+      signatureDataUrl = null;
+      // Re-enable sign button
+      if (canSign) {
+        signBtn.style.display = 'flex';
+      }
+
+      // Notify parent that signature was cancelled
+      if (window.parent !== window) {
+        window.parent.postMessage({
+          type: 'signature-cancelled'
+        }, '*');
+      }
+    });
+
+    window.addEventListener('message', (e) => {
+      if (e.data.type === 'enable-sign') {
+        signBtn.style.display = 'flex';
+      } else if (e.data.type === 'disable-sign') {
+        signBtn.style.display = 'none';
+      }
+    });
+  </script>
+</body>
+</html>

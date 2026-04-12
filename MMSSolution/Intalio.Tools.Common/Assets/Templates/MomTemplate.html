@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Tajawal', sans-serif;
+            font-size: 12px;
+            color: #000000;
+            direction: rtl;
+            text-align: right;
+            line-height: 1.6;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #C085C0;
+        }
+
+        .org-name {
+            font-size: 14px;
+            font-weight: 700;
+            color: #803580;
+            margin-bottom: 5px;
+        }
+
+        .committee-name {
+            font-size: 12px;
+            color: #646464;
+            margin-bottom: 15px;
+        }
+
+        .main-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #803580;
+            margin-bottom: 10px;
+        }
+
+        .meeting-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #000000;
+            margin-bottom: 10px;
+        }
+
+        .reference-info {
+            font-size: 10px;
+            color: #646464;
+        }
+
+        .section {
+            margin-bottom: 25px;
+        }
+
+        .section-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: #803580;
+            margin-bottom: 12px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #C085C0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 15px;
+        }
+
+        .info-table td {
+            padding: 10px 15px;
+            border: 1px solid #e0e0e0;
+            vertical-align: middle;
+        }
+
+        .info-table tr:nth-child(odd) td {
+            background-color: #F5F5FA;
+        }
+
+        .info-table .label {
+            font-weight: 700;
+            color: #646464;
+        }
+
+        .info-table .value {
+            color: #000000;
+        }
+
+        .data-table {
+            border-top: 2px solid #803580;
+            border-bottom: 2px solid #803580;
+        }
+
+        .data-table th {
+            background-color: #803580;
+            color: #FFFFFF;
+            padding: 12px 10px;
+            font-weight: 700;
+            text-align: center;
+            font-size: 12px;
+        }
+
+        .data-table td {
+            padding: 10px;
+            border-bottom: 1px solid #e0e0e0;
+            text-align: center;
+            font-size: 11px;
+        }
+
+        .data-table tr:nth-child(even) td {
+            background-color: #F5F5FA;
+        }
+
+        .status-present {
+            color: #228B22;
+            font-weight: 700;
+        }
+
+        .status-absent {
+            color: #DC3545;
+            font-weight: 700;
+        }
+
+        .agenda-item {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #fafafa;
+            border-radius: 8px;
+            border-right: 4px solid #803580;
+        }
+
+        .agenda-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: #803580;
+            margin-bottom: 8px;
+        }
+
+        .agenda-description {
+            font-size: 12px;
+            color: #646464;
+            margin-bottom: 8px;
+        }
+
+        .agenda-duration {
+            font-size: 10px;
+            color: #646464;
+            margin-bottom: 10px;
+        }
+
+        .notes-section, .recommendations-section {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px dashed #ddd;
+        }
+
+        .notes-title, .recommendations-title {
+            font-size: 12px;
+            font-weight: 700;
+            color: #000000;
+            margin-bottom: 8px;
+        }
+
+        .note-item, .recommendation-item {
+            font-size: 11px;
+            margin-bottom: 5px;
+            padding-right: 15px;
+        }
+
+        .note-item::before, .recommendation-item::before {
+            content: '•';
+            margin-left: 8px;
+            color: #803580;
+        }
+
+        .recommendation-meta {
+            font-size: 10px;
+            color: #646464;
+            padding-right: 15px;
+        }
+
+        .voting-section {
+            margin-top: 15px;
+            padding: 12px;
+            background: #f0f7ff;
+            border-radius: 6px;
+        }
+
+        .voting-title {
+            font-size: 12px;
+            font-weight: 700;
+            color: #000000;
+            margin-bottom: 10px;
+        }
+
+        .voting-outcome {
+            margin-top: 10px;
+            font-weight: 700;
+            color: #228B22;
+        }
+
+        .signature-table {
+            width: 100%;
+            border: none;
+            margin-top: 40px;
+        }
+
+        .signature-table td {
+            width: 50%;
+            text-align: center;
+            border: none;
+            padding: 20px;
+            vertical-align: top;
+        }
+
+        .signature-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: #803580;
+            margin-bottom: 5px;
+        }
+
+        .signature-name {
+            font-size: 13px;
+            color: #000000;
+            margin-bottom: 30px;
+        }
+
+        .signature-line {
+            border-top: 1px solid #C085C0;
+            padding-top: 5px;
+            font-size: 10px;
+            color: #646464;
+        }
+
+        .footer {
+            margin-top: 30px;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+            text-align: center;
+            font-size: 9px;
+            color: #646464;
+        }
+
+        .summary-text {
+            font-size: 12px;
+            line-height: 1.8;
+            padding: 15px;
+            background: #F5F5FA;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header Section -->
+    {{#if OrganizationName}}
+    <div class="header">
+        <div class="org-name">{{OrganizationName}}</div>
+        {{#if CommitteeName}}<div class="committee-name">{{CommitteeName}}</div>{{/if}}
+        <div class="main-title">محضر اجتماع</div>
+        <div class="meeting-title">{{Title}}</div>
+        <div class="reference-info">رقم المرجع: {{ReferenceNumber}} | رقم الاجتماع: {{MeetingNumber}}</div>
+    </div>
+    {{/if}}
+
+    <!-- Meeting Info Section -->
+    <div class="section">
+        <div class="section-title">معلومات الاجتماع</div>
+        <table class="info-table">
+            <tr>
+                <td><span class="label">التاريخ: </span><span class="value">{{Date}}</span></td>
+                <td><span class="label">الوقت: </span><span class="value">من {{StartTime}} إلى {{EndTime}}</span></td>
+            </tr>
+            <tr>
+                <td><span class="label">المكان: </span><span class="value">{{Location}}</span></td>
+                <td><span class="label">المدة: </span><span class="value">{{ActualDuration}}</span></td>
+            </tr>
+            <tr>
+                <td><span class="label">الحضور: </span><span class="value">{{PresentCount}} من أصل {{TotalAttendees}} ({{QuorumStatus}})</span></td>
+                {{#if CouncilSessionName}}<td><span class="label">الدورة: </span><span class="value">{{CouncilSessionName}}</span></td>{{/if}}
+            </tr>
+        </table>
+    </div>
+
+    <!-- Attendees Section -->
+    {{#if Attendees}}
+    <div class="section">
+        <div class="section-title">الحضور والغياب</div>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>الاسم</th>
+                    <th>المسمى الوظيفي</th>
+                    <th>الصفة</th>
+                    <th>الحضور</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{#each Attendees}}
+                <tr>
+                    <td>{{Index}}</td>
+                    <td>{{Name}}</td>
+                    <td>{{JobTitle}}</td>
+                    <td>{{Role}}</td>
+                    <td class="{{StatusClass}}">{{Status}}</td>
+                </tr>
+                {{/each}}
+            </tbody>
+        </table>
+    </div>
+    {{/if}}
+
+    <!-- Agenda Section -->
+    {{#if AgendaItems}}
+    <div class="section">
+        <div class="section-title">جدول الأعمال</div>
+        {{#each AgendaItems}}
+        <div class="agenda-item">
+            <div class="agenda-title">البند {{Index}}: {{Title}}</div>
+            {{#if Description}}<div class="agenda-description">{{Description}}</div>{{/if}}
+            {{#if HasDuration}}<div class="agenda-duration">المدة المخططة: {{PlannedDuration}} دقيقة | المدة الفعلية: {{ActualDuration}} دقيقة</div>{{/if}}
+
+            {{#if DiscussionNotes}}
+            <div class="notes-section">
+                <div class="notes-title">الملاحظات:</div>
+                {{#each DiscussionNotes}}
+                <div class="note-item">{{Text}} — {{AuthorName}}</div>
+                {{/each}}
+            </div>
+            {{/if}}
+
+            {{#if HasVoting}}
+            <div class="voting-section">
+                <div class="voting-title">نتائج التصويت:</div>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>الخيار</th>
+                            <th>الأصوات</th>
+                            <th>النسبة</th>
+                            {{#if IncludeVoterNames}}<th>المصوتون</th>{{/if}}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{#each VotingOptions}}
+                        <tr>
+                            <td>{{Name}}</td>
+                            <td>{{VoteCount}}</td>
+                            <td>{{Percentage}}%</td>
+                            {{#if ../IncludeVoterNames}}<td>{{Voters}}</td>{{/if}}
+                        </tr>
+                        {{/each}}
+                    </tbody>
+                </table>
+                <div class="voting-outcome">القرار: {{VotingOutcome}}</div>
+            </div>
+            {{/if}}
+
+            {{#if Recommendations}}
+            <div class="recommendations-section">
+                <div class="recommendations-title">التوصيات:</div>
+                {{#each Recommendations}}
+                <div class="recommendation-item">{{Text}}</div>
+                {{#if HasMeta}}<div class="recommendation-meta">المسؤول: {{OwnerName}} | الموعد: {{DueDate}}</div>{{/if}}
+                {{/each}}
+            </div>
+            {{/if}}
+        </div>
+        {{/each}}
+    </div>
+    {{/if}}
+
+    <!-- Recommendations Summary Section -->
+    {{#if AllRecommendations}}
+    <div class="section">
+        <div class="section-title">ملخص التوصيات والمهام</div>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>التوصية</th>
+                    <th>البند</th>
+                    <th>المسؤول</th>
+                    <th>الموعد</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{#each AllRecommendations}}
+                <tr>
+                    <td>{{Index}}</td>
+                    <td style="text-align: right;">{{Text}}</td>
+                    <td>البند {{AgendaIndex}}</td>
+                    <td>{{OwnerName}}</td>
+                    <td>{{DueDate}}</td>
+                </tr>
+                {{/each}}
+            </tbody>
+        </table>
+    </div>
+    {{/if}}
+
+    <!-- Summary Section -->
+    {{#if MeetingSummary}}
+    <div class="section">
+        <div class="section-title">ملخص الاجتماع</div>
+        <div class="summary-text">{{MeetingSummary}}</div>
+    </div>
+    {{/if}}
+
+    <!-- Signatures Section -->
+    <div class="section">
+        <div class="section-title">التوقيعات</div>
+        <table class="signature-table">
+            <tr>
+                <td>
+                    <div class="signature-title">{{ChairmanTitle}}</div>
+                    <div class="signature-name">{{ChairmanName}}</div>
+                    <div class="signature-line">التوقيع</div>
+                </td>
+                <td>
+                    <div class="signature-title">{{SecretaryTitle}}</div>
+                    <div class="signature-name">{{SecretaryName}}</div>
+                    <div class="signature-line">التوقيع</div>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+        محضر اجتماع {{MeetingNumber}} | الإصدار {{VersionLabel}} | تم الإنشاء بتاريخ {{GeneratedAt}}
+    </div>
+</body>
+</html>

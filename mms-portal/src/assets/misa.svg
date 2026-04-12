@@ -1,0 +1,29 @@
+<svg width="783" height="320" viewBox="0 0 783 320" fill="none" xmlns="http://www.w3.org/2000/svg">
+<rect width="160" height="152" transform="translate(631 320) rotate(-90)" fill="#E6F1ED"/>
+<path d="M707 160L707 240C748.974 240 783 204.183 783 160L707 160Z" fill="#66AA94"/>
+<path d="M631 240C631 195.817 665.026 160 707 160L707 240L631 240Z" fill="#00714D"/>
+<rect width="160" height="152" transform="translate(479 160) rotate(-90)" fill="#E6F1ED"/>
+<path d="M555 80L555 0L631 80L555 80Z" fill="#66AA94"/>
+<path d="M479 80L555 80L555 160L479 80Z" fill="#66AA94"/>
+<rect width="160" height="152" transform="translate(631 160) rotate(-90)" fill="#99C6B8"/>
+<path d="M783 80C783 124.183 748.974 160 707 160C665.026 160 631 124.183 631 80L783 80Z" fill="#00714D"/>
+<ellipse cx="707" cy="80" rx="40" ry="38" transform="rotate(-90 707 80)" fill="#E6F1ED"/>
+<rect width="160" height="152" transform="translate(479 320) rotate(-90)" fill="#99C6B8"/>
+<path d="M479 160L631 160L631 320L479 160Z" fill="#00714D"/>
+<ellipse cx="555" cy="240" rx="40" ry="38" transform="rotate(-90 555 240)" fill="#E6F1ED"/>
+<rect width="160" height="152" transform="translate(480 158) rotate(-180)" fill="#99C6B8"/>
+<path d="M480 82L400 82C400 40.0264 435.817 6 480 6L480 82Z" fill="#E6F1ED"/>
+<path d="M400 158C355.817 158 320 123.974 320 82L400 82L400 158Z" fill="#00714D"/>
+<rect width="160" height="152" transform="translate(320 158) rotate(-180)" fill="#E6F1ED"/>
+<path d="M160 5.99999C204.183 6 240 40.0264 240 82C240 123.974 204.183 158 160 158L160 5.99999Z" fill="#00714D"/>
+<ellipse cx="280" cy="82" rx="40" ry="38" transform="rotate(-180 280 82)" fill="#99C6B8"/>
+<rect width="160" height="152" transform="translate(160 158) rotate(-180)" fill="#99C6B8"/>
+<path d="M160 6C115.817 6 80 40.0263 80 82C80 123.974 115.817 158 160 158L160 6Z" fill="#00714D"/>
+<path d="M1.33495e-06 158L7.62939e-06 6L80 82L1.33495e-06 158Z" fill="#E6F1ED"/>
+<rect width="160" height="152" transform="translate(479 311) rotate(-180)" fill="#E6F1ED"/>
+<path d="M319 235L399 235C399 193.026 363.183 159 319 159L319 235Z" fill="#66AA94"/>
+<path d="M399 311C354.817 311 319 276.974 319 235L399 235L399 311Z" fill="#00714D"/>
+<rect width="160" height="152" transform="translate(319 311) rotate(-180)" fill="#99C6B8"/>
+<path d="M239 159C283.183 159 319 193.026 319 235C319 276.974 283.183 311 239 311L239 159Z" fill="#00714D"/>
+<ellipse cx="239" cy="235" rx="40" ry="38" transform="rotate(-180 239 235)" fill="#E6F1ED"/>
+</svg>

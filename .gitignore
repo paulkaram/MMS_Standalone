@@ -1,0 +1,121 @@
+# ============================================
+# .NET / Visual Studio
+# ============================================
+bin/
+obj/
+out/
+[Bb]in/
+[Oo]bj/
+[Oo]ut/
+[Ll]og/
+[Ll]ogs/
+
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.userprefs
+*.dbmdl
+*.dbproj.schemaview
+*.jfm
+*.pfx
+*.publishsettings
+*.cache
+*.tmp_proj
+*_i.c
+*_p.c
+*_h.h
+*.ilk
+*.meta
+*.obj
+*.iobj
+*.pch
+*.pdb
+*.ipdb
+*.pgc
+*.pgd
+*.rsp
+*.sbr
+*.tlb
+*.tli
+*.tlh
+*.tmp
+*.vspscc
+*.vssscc
+.builds
+*.pidb
+*.svclog
+*.scc
+*.dll
+*.exe
+
+# Visual Studio
+.vs/
+.vscode/
+*.swp
+
+# ============================================
+# Node / Vue
+# ============================================
+node_modules/
+.npm
+.eslintcache
+.pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+npm-debug.log*
+
+# Build outputs
+dist/
+dist-ssr/
+build/
+.output/
+
+# Vite
+.vite/
+.vite-cache/
+
+# TypeScript
+*.tsbuildinfo
+
+# Coverage
+coverage/
+.nyc_output/
+
+# ============================================
+# Environment & secrets
+# ============================================
+.env.local
+.env.*.local
+*.local
+
+# ============================================
+# OS
+# ============================================
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# ============================================
+# IDE / Editor
+# ============================================
+.idea/
+*.iml
+*.swo
+.history/
+
+# ============================================
+# Project specific
+# ============================================
+# Local Claude data
+.claude/
+
+# Local logs
+logs/
+*.log
+
+# Temp files
+*.tmp
+*.bak
