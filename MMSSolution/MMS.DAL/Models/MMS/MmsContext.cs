@@ -159,6 +159,10 @@ public partial class MmsContext : DbContext
 
     public virtual DbSet<UserRole> UserRoles { get; set; }
 
+    public virtual DbSet<CommitteeItem> CommitteeItems { get; set; }
+
+    public virtual DbSet<CommitteeItemType> CommitteeItemTypes { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<AccountType>(entity =>
@@ -1190,6 +1194,44 @@ public partial class MmsContext : DbContext
                 .HasForeignKey(d => d.RoleId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_UserRole_Role");
+        });
+
+        modelBuilder.Entity<CommitteeItemType>(entity =>
+        {
+            entity.ToTable("CommitteeItemType");
+            entity.Property(e => e.NameAr).HasMaxLength(200);
+            entity.Property(e => e.NameEn).HasMaxLength(200);
+        });
+
+        modelBuilder.Entity<CommitteeItem>(entity =>
+        {
+            entity.ToTable("CommitteeItem");
+            entity.Property(e => e.ReferenceNumber).HasMaxLength(50);
+            entity.Property(e => e.ExternalReferenceNumber).HasMaxLength(200);
+            entity.Property(e => e.Tags).HasMaxLength(500);
+            entity.Property(e => e.Order).HasColumnName("Order");
+            entity.Property(e => e.CreatedDate)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime");
+
+            entity.HasOne(d => d.Committee).WithMany()
+                .HasForeignKey(d => d.CommitteeId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_CommitteeItem_Committee");
+
+            entity.HasOne(d => d.ItemType).WithMany(p => p.CommitteeItems)
+                .HasForeignKey(d => d.ItemTypeId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_CommitteeItem_ItemType");
+
+            entity.HasOne(d => d.RelatedItem).WithMany(p => p.InverseRelatedItem)
+                .HasForeignKey(d => d.RelatedItemId)
+                .HasConstraintName("FK_CommitteeItem_RelatedItem");
+
+            entity.HasOne(d => d.CreatedByNavigation).WithMany()
+                .HasForeignKey(d => d.CreatedBy)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_CommitteeItem_CreatedBy");
         });
 
         modelBuilder.Entity<ViewerToken>(entity =>

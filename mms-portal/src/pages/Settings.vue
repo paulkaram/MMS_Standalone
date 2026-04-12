@@ -137,6 +137,17 @@ const allSettingsItems: SettingsItem[] = [
     permissionName: 'VotingTypesSettings'
   },
   {
+    name: 'committee-item-types',
+    label: 'CommitteeItemTypes',
+    fallback: 'أنواع بنود اللجان',
+    descKey: 'CommitteeItemTypesDesc',
+    descFallback: 'إدارة أنواع بنود اللجان',
+    icon: 'mdi:format-list-bulleted-type',
+    iconClass: 'icon-navy',
+    to: '/committee-item-types',
+    permissionName: 'SystemSettings'
+  },
+  {
     name: 'mom-templates',
     label: 'MomTemplateSettings',
     fallback: 'قوالب المحضر',

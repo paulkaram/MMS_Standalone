@@ -3,5 +3,8 @@
 	public static class FormattingConstants
 	{
 		public const string DateFormat = "yyyy/MM/dd";
+
+		public const string SessionReferenceNumberPrefix = "SES";
+		public const string CommitteeItemReferenceNumberPrefix = "ITM";
 	}
 }

@@ -36,7 +36,8 @@
         CommitteeActivities = 44,
 		CommitteeAttachmentButtonAdd = 45,
         CommitteeAttachments = 46,
-		CommitteeSessions = 47
+		CommitteeSessions = 47,
+		CommitteeItems = 48
     }
 	public enum PermissionLevelDbEnum
 	{

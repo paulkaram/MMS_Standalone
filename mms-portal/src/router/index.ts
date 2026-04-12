@@ -86,6 +86,7 @@ const Roles = () => import('@/pages/Admin/Roles.vue')
 const AuditTrail = () => import('@/pages/Admin/AuditTrail.vue')
 const CouncilsAndCommittees = () => import('@/pages/Admin/CouncilsAndCommittees.vue')
 const VotingTypeSettings = () => import('@/pages/Admin/VotingTypeSettings.vue')
+const CommitteeItemTypeSettings = () => import('@/pages/Admin/CommitteeItemTypeSettings.vue')
 const MomTemplateSettings = () => import('@/pages/Admin/MomTemplateSettings.vue')
 const MenuPermissions = () => import('@/pages/Admin/MenuPermissions.vue')
 const TasksConfiguration = () => import('@/pages/Admin/TasksConfiguration.vue')
@@ -260,6 +261,12 @@ const routes: RouteRecordRaw[] = [
     name: 'voting-types',
     path: '/voting-types',
     component: VotingTypeSettings,
+    meta: { secure: true, permission: 'admin' }
+  },
+  {
+    name: 'committee-item-types',
+    path: '/committee-item-types',
+    component: CommitteeItemTypeSettings,
     meta: { secure: true, permission: 'admin' }
   },
   {

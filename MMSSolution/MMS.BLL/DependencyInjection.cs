@@ -53,6 +53,7 @@ namespace MMS.BLL
 			services.AddScoped<CommitteeRoleManager>();
 			services.AddScoped<MomTemplateManager>();
 			services.AddScoped<SessionManager>();
+			services.AddScoped<CommitteeItemManager>();
 
 
 			return services;

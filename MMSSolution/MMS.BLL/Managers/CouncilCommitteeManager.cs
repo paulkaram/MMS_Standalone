@@ -748,7 +748,8 @@ namespace MMS.BLL.Managers
                 MeetingsMinutes: isSuperAdmin || isCommittClassificationAdmin || userPerm.Contains((int)CommitteePermissionDbEnum.CommitteeMeetingMinutes),
                 CommitteeActivities: isSuperAdmin || isCommittClassificationAdmin || userPerm.Contains((int)CommitteePermissionDbEnum.CommitteeActivities),
                 CommitteeAttachments: isSuperAdmin || isCommittClassificationAdmin || userPerm.Contains((int)CommitteePermissionDbEnum.CommitteeAttachments),
-                CommitteeAttachmentButtonAdd: isSuperAdmin || isCommittClassificationAdmin || userPerm.Contains((int)CommitteePermissionDbEnum.CommitteeAttachmentButtonAdd)
+                CommitteeAttachmentButtonAdd: isSuperAdmin || isCommittClassificationAdmin || userPerm.Contains((int)CommitteePermissionDbEnum.CommitteeAttachmentButtonAdd),
+                CommitteeItems: isSuperAdmin || isCommittClassificationAdmin || userPerm.Contains((int)CommitteePermissionDbEnum.CommitteeItems)
                 );
         }
 

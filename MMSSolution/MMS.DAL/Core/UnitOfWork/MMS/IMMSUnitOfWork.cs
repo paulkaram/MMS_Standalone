@@ -31,6 +31,8 @@ namespace MMS.DAL.Core.UnitOfWork.MMS
 		ISessionRepository Sessions { get; }
 		ISessionItemRepository SessionItems { get; }
 		ISessionItemTypeRepository SessionItemTypes { get; }
+		ICommitteeItemRepository CommitteeItems { get; }
+		ICommitteeItemTypeRepository CommitteeItemTypes { get; }
 		IRoleMenuPermissionRepository RoleMenuPermissions { get; }
 		IGroupMenuPermissionRepository GroupMenuPermissions { get; }
 		IUserGroupRepository UserGroups { get; }

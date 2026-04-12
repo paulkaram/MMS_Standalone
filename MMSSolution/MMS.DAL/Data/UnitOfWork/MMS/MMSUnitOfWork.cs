@@ -44,6 +44,8 @@ namespace MMS.DAL.Data.UnitOfWork.MMS
 		public ISessionRepository Sessions { get; private set; }
 		public ISessionItemRepository SessionItems { get; private set; }
 		public ISessionItemTypeRepository SessionItemTypes { get; private set; }
+		public ICommitteeItemRepository CommitteeItems { get; private set; }
+		public ICommitteeItemTypeRepository CommitteeItemTypes { get; private set; }
 		public IRoleMenuPermissionRepository RoleMenuPermissions { get; private set; }
 		public IGroupMenuPermissionRepository GroupMenuPermissions { get; private set; }
 		public IUserGroupRepository UserGroups { get; private set; }
@@ -81,6 +83,8 @@ namespace MMS.DAL.Data.UnitOfWork.MMS
 			Sessions = new SessionRepository(context);
 			SessionItems = new SessionItemRepository(context);
 			SessionItemTypes = new SessionItemTypeRepository(context);
+			CommitteeItems = new CommitteeItemRepository(context);
+			CommitteeItemTypes = new CommitteeItemTypeRepository(context);
 			RoleMenuPermissions = new RoleMenuPermissionRepository(context);
 			GroupMenuPermissions = new GroupMenuPermissionRepository(context);
 			UserGroups = new UserGroupRepository(context);

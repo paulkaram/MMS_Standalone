@@ -23,6 +23,7 @@
         <StatCard v-if="permissions.recommendations" :title="$t('Recommendations')" :value="stats.recommendations" icon="mdi:lightbulb" color="warning" />
         <StatCard v-if="permissions.committeeActivities" :title="$t('Activities')" :value="stats.activities" icon="mdi:chart-timeline" color="success" />
         <StatCard v-if="permissions.committeeAttachments" :title="$t('Attachments')" :value="stats.attachments" icon="mdi:attachment" color="secondary" />
+        <StatCard v-if="permissions.committeeItems" :title="$t('Items')" :value="stats.items" icon="mdi:format-list-bulleted" color="primary" />
       </div>
 
       <!-- Dashboard Grid -->
@@ -75,6 +76,18 @@
           </div>
         </section>
 
+        <!-- Items -->
+        <section v-if="permissions.committeeItems" class="cd-card cd-items">
+          <div class="cd-card-header">
+            <div class="cd-card-icon items"><Icon icon="mdi:format-list-bulleted" class="w-4 h-4" /></div>
+            <h3>{{ $t('Items') }}</h3>
+            <span class="cd-card-badge">{{ stats.items }}</span>
+          </div>
+          <div class="cd-card-body">
+            <CommitteeItems :committee-id="committeeId" @update:count="stats.items = $event" />
+          </div>
+        </section>
+
         <!-- Attachments -->
         <section v-if="permissions.committeeAttachments" class="cd-card cd-attachments">
           <div class="cd-card-header">
@@ -112,6 +125,7 @@ import CommitteeMeetings from '@/components/app/generalInfo/CommitteeMeetings.vu
 import CommitteeRecommendations from '@/components/app/generalInfo/CommitteeRecommendations.vue'
 import CommitteeActivities from '@/components/app/generalInfo/CommitteeActivities.vue'
 import CommitteeAttachments from '@/components/app/generalInfo/CommitteeAttachments.vue'
+import CommitteeItems from '@/components/app/generalInfo/CommitteeItems.vue'
 import CouncilCommitteesService from '@/services/CouncilCommitteesService'
 
 const route = useRoute()
@@ -127,7 +141,8 @@ const permissions = ref({
   recommendations: false,
   committeeActivities: false,
   committeeAttachments: false,
-  committeeAttachmentButtonAdd: false
+  committeeAttachmentButtonAdd: false,
+  committeeItems: false
 })
 const stats = ref({
   members: 0,
@@ -135,7 +150,8 @@ const stats = ref({
   recommendations: 0,
   recommendationsProgress: 0,
   activities: 0,
-  attachments: 0
+  attachments: 0,
+  items: 0
 })
 
 // Computed
@@ -147,7 +163,8 @@ const hasAnyPermission = computed(() => {
     permissions.value.meetings ||
     permissions.value.recommendations ||
     permissions.value.committeeActivities ||
-    permissions.value.committeeAttachments
+    permissions.value.committeeAttachments ||
+    permissions.value.committeeItems
   )
 })
 
