@@ -18,5 +18,6 @@ namespace MMS.DTO.CommitteeItems
         public string CreatedBy { get; set; } = null!;
         public string? CreatedByName { get; set; }
         public DateTime CreatedDate { get; set; }
+        public List<ListItemDto> TagList { get; set; } = new();
     }
 }

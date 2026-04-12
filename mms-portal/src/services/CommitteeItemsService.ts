@@ -17,6 +17,7 @@ export interface CommitteeItem {
   createdBy: string
   createdByName?: string | null
   createdDate: string
+  tagList: { id: number; name: string }[]
 }
 
 export interface CommitteeItemPost {
@@ -29,6 +30,7 @@ export interface CommitteeItemPost {
   relatedItemId?: number | null
   isPrivate: boolean
   order: number
+  tagIds: number[]
 }
 
 export interface ListItem {

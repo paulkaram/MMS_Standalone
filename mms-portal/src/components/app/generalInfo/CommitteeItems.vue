@@ -44,9 +44,9 @@
 
         <div class="item-content" v-html="item.content"></div>
 
-        <div v-if="item.tags" class="item-tags">
-          <span v-for="tag in item.tags.split(',')" :key="tag" class="tag-chip">
-            {{ tag.trim() }}
+        <div v-if="item.tagList && item.tagList.length > 0" class="item-tags">
+          <span v-for="tag in item.tagList" :key="tag.id" class="tag-chip">
+            {{ tag.name }}
           </span>
         </div>
 
@@ -92,15 +92,14 @@
           <textarea v-model="form.content" rows="6" class="form-input" required></textarea>
         </div>
 
-        <div class="form-row">
-          <div class="form-field">
-            <label>{{ $t('Tags') }}</label>
-            <input v-model="form.tags" type="text" class="form-input" :placeholder="$t('Tags')" />
-          </div>
-          <div class="form-field">
-            <label>{{ $t('Order') }}</label>
-            <input v-model.number="form.order" type="number" min="0" class="form-input" />
-          </div>
+        <div class="form-field">
+          <label>{{ $t('Tags') }}</label>
+          <TagPicker v-model="form.tagIds" />
+        </div>
+
+        <div class="form-field">
+          <label>{{ $t('Order') }}</label>
+          <input v-model.number="form.order" type="number" min="0" class="form-input" />
         </div>
 
         <div class="form-field">
@@ -158,6 +157,7 @@ import Modal from '@/components/ui/Modal.vue'
 import ConfirmModal from '@/components/ui/ConfirmModal.vue'
 import UserAvatar from '@/components/ui/UserAvatar.vue'
 import CommitteeItemsService, { type CommitteeItem, type CommitteeItemPost, type ListItem } from '@/services/CommitteeItemsService'
+import TagPicker from '@/components/ui/TagPicker.vue'
 import { useToast } from '@/composables/useToast'
 import { useI18n } from 'vue-i18n'
 
@@ -194,7 +194,8 @@ const emptyForm = (): CommitteeItemPost => ({
   internalNote: null,
   relatedItemId: null,
   isPrivate: false,
-  order: 0
+  order: 0,
+  tagIds: []
 })
 
 const form = reactive<CommitteeItemPost>(emptyForm())
@@ -239,7 +240,8 @@ const openEditModal = (item: CommitteeItem) => {
     internalNote: item.internalNote,
     relatedItemId: item.relatedItemId,
     isPrivate: item.isPrivate,
-    order: item.order
+    order: item.order,
+    tagIds: (item.tagList || []).map(t => t.id)
   })
   modalOpen.value = true
 }

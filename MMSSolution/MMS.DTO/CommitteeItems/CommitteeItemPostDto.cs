@@ -11,5 +11,6 @@ namespace MMS.DTO.CommitteeItems
         public int? RelatedItemId { get; set; }
         public bool IsPrivate { get; set; }
         public int Order { get; set; }
+        public List<int> TagIds { get; set; } = new();
     }
 }

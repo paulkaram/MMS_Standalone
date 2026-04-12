@@ -13,11 +13,13 @@ namespace MMS.BLL.Managers
     {
         private readonly IMapper _mapper;
         private readonly IMMSUnitOfWork _mmsUnitOfWork;
+        private readonly TagManager _tagManager;
 
-        public CommitteeItemManager(IMapper mapper, IMMSUnitOfWork mmsUnitOfWork)
+        public CommitteeItemManager(IMapper mapper, IMMSUnitOfWork mmsUnitOfWork, TagManager tagManager)
         {
             _mapper = mapper;
             _mmsUnitOfWork = mmsUnitOfWork;
+            _tagManager = tagManager;
         }
 
         public async Task<CommitteeItemDto> CreateAsync(CommitteeItemPostDto dto, string userId, LanguageDbEnum language)
@@ -41,6 +43,9 @@ namespace MMS.BLL.Managers
             await _mmsUnitOfWork.CommitteeItems.AddAsync(item);
             await _mmsUnitOfWork.SaveChangesAsync();
 
+            if (dto.TagIds.Any())
+                await _tagManager.SetTagsForEntityAsync(TagEntityTypeDbEnum.CommitteeItem, item.Id, dto.TagIds);
+
             return await GetAsync(item.Id, language)
                 ?? throw new InvalidOperationException(MessageConstants.ErrorOccured);
         }
@@ -49,17 +54,37 @@ namespace MMS.BLL.Managers
         {
             var item = await _mmsUnitOfWork.CommitteeItems.GetIncludeRelationsAsync(i => i.Id == itemId);
             if (item == null) return null;
-            return _mapper.Map<CommitteeItemDto>((item, language));
+
+            var dto = _mapper.Map<CommitteeItemDto>((item, language));
+            dto.TagList = await _tagManager.ListForEntityAsync(TagEntityTypeDbEnum.CommitteeItem, item.Id, language);
+            return dto;
         }
 
         public async Task<List<CommitteeItemDto>> ListByCommitteeAsync(int committeeId, LanguageDbEnum language)
         {
-            var items = await _mmsUnitOfWork.CommitteeItems.ListIncludeRelationsAsync(i => i.CommitteeId == committeeId);
-            return items
+            var items = (await _mmsUnitOfWork.CommitteeItems.ListIncludeRelationsAsync(i => i.CommitteeId == committeeId))
                 .OrderBy(i => i.Order)
                 .ThenBy(i => i.Id)
-                .Select(i => _mapper.Map<CommitteeItemDto>((i, language)))
                 .ToList();
+
+            // Batch load tag links for all items
+            var itemIds = items.Select(i => i.Id).ToList();
+            var tagLinks = await _mmsUnitOfWork.TagLinks.ListForEntitiesAsync((int)TagEntityTypeDbEnum.CommitteeItem, itemIds);
+            var tagsByEntity = tagLinks
+                .GroupBy(tl => tl.EntityId)
+                .ToDictionary(g => g.Key, g => g.Select(tl => tl.Tag).ToList());
+
+            var result = new List<CommitteeItemDto>();
+            foreach (var item in items)
+            {
+                var dto = _mapper.Map<CommitteeItemDto>((item, language));
+                if (tagsByEntity.TryGetValue(item.Id, out var itemTags))
+                {
+                    dto.TagList = itemTags.Select(t => _mapper.Map<ListItemDto>((t, language))).ToList();
+                }
+                result.Add(dto);
+            }
+            return result;
         }
 
         public async Task<CommitteeItemDto?> UpdateAsync(int itemId, CommitteeItemPostDto dto, LanguageDbEnum language)
@@ -77,6 +102,9 @@ namespace MMS.BLL.Managers
             item.Order = dto.Order;
 
             await _mmsUnitOfWork.SaveChangesAsync();
+
+            await _tagManager.SetTagsForEntityAsync(TagEntityTypeDbEnum.CommitteeItem, itemId, dto.TagIds);
+
             return await GetAsync(itemId, language);
         }
 
@@ -84,6 +112,9 @@ namespace MMS.BLL.Managers
         {
             var item = await _mmsUnitOfWork.CommitteeItems.GetAsync(i => i.Id == itemId);
             if (item == null) return false;
+
+            // Remove any tag links first
+            await _mmsUnitOfWork.TagLinks.RemoveAllForEntityAsync((int)TagEntityTypeDbEnum.CommitteeItem, itemId);
 
             _mmsUnitOfWork.CommitteeItems.Remove(item);
             await _mmsUnitOfWork.SaveChangesAsync();

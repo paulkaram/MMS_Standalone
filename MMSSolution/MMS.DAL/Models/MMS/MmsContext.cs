@@ -163,6 +163,10 @@ public partial class MmsContext : DbContext
 
     public virtual DbSet<CommitteeItemType> CommitteeItemTypes { get; set; }
 
+    public virtual DbSet<Tag> Tags { get; set; }
+
+    public virtual DbSet<TagLink> TagLinks { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<AccountType>(entity =>
@@ -1201,6 +1205,34 @@ public partial class MmsContext : DbContext
             entity.ToTable("CommitteeItemType");
             entity.Property(e => e.NameAr).HasMaxLength(200);
             entity.Property(e => e.NameEn).HasMaxLength(200);
+        });
+
+        modelBuilder.Entity<Tag>(entity =>
+        {
+            entity.ToTable("Tag");
+            entity.Property(e => e.NameAr).HasMaxLength(100);
+            entity.Property(e => e.NameEn).HasMaxLength(100);
+            entity.Property(e => e.Color).HasMaxLength(20);
+            entity.Property(e => e.CreatedDate)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime");
+            entity.HasIndex(e => e.NameEn).IsUnique();
+        });
+
+        modelBuilder.Entity<TagLink>(entity =>
+        {
+            entity.ToTable("TagLink");
+            entity.Property(e => e.CreatedDate)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime");
+
+            entity.HasOne(d => d.Tag).WithMany(p => p.TagLinks)
+                .HasForeignKey(d => d.TagId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("FK_TagLink_Tag");
+
+            entity.HasIndex(e => new { e.TagId, e.EntityTypeId, e.EntityId }).IsUnique();
+            entity.HasIndex(e => new { e.EntityTypeId, e.EntityId });
         });
 
         modelBuilder.Entity<CommitteeItem>(entity =>

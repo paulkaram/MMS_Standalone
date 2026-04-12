@@ -148,6 +148,17 @@ const allSettingsItems: SettingsItem[] = [
     permissionName: 'SystemSettings'
   },
   {
+    name: 'tags',
+    label: 'Tags',
+    fallback: 'الوسوم',
+    descKey: 'TagDesc',
+    descFallback: 'إدارة وسوم اللجان والاجتماعات والبنود',
+    icon: 'mdi:tag-multiple',
+    iconClass: 'icon-teal',
+    to: '/tags',
+    permissionName: 'SystemSettings'
+  },
+  {
     name: 'mom-templates',
     label: 'MomTemplateSettings',
     fallback: 'قوالب المحضر',
