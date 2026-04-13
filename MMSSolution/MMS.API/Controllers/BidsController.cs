@@ -47,6 +47,20 @@ namespace MMS.API.Controllers
             }
         }
 
+        [HttpGet("my")]
+        public async Task<IActionResult> ListMine()
+        {
+            try
+            {
+                var bids = await _bidManager.ListForUserAsync(UserId, Language);
+                return Ok(new ApiResponseDto<List<BidDto>>(bids));
+            }
+            catch (Exception ex)
+            {
+                return ErrorResponse(ex);
+            }
+        }
+
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(int id)
         {

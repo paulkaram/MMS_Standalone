@@ -53,6 +53,41 @@ namespace MMS.BLL.Managers
             return bids.Select(b => _mapper.Map<BidDto>((b, language, now))).ToList();
         }
 
+        public async Task<List<BidDto>> ListForUserAsync(string userId, LanguageDbEnum language)
+        {
+            // Committees the user is a member of (via UserCommittee)
+            var memberCommitteeIds = (await _mmsUnitOfWork.UserCommittee.ListAsync(uc => uc.UserId == userId))
+                .Select(uc => uc.CommitteeId).Distinct().ToList();
+
+            // Bids this user: created, is team leader, is stakeholder, or belongs to a committee they're in
+            var allBids = await _mmsUnitOfWork.Bids.ListAsync();
+
+            var stakeholderBidIds = (await _mmsUnitOfWork.BidStakeholders.ListAsync(s => s.UserId == userId))
+                .Select(s => s.BidId).Distinct().ToHashSet();
+
+            var relevantBids = allBids.Where(b =>
+                b.CreatedBy == userId
+                || b.TeamLeaderUserId == userId
+                || memberCommitteeIds.Contains(b.CommitteeId)
+                || stakeholderBidIds.Contains(b.Id)
+            ).ToList();
+
+            // Reload with includes
+            var ids = relevantBids.Select(b => b.Id).ToList();
+            var enriched = new List<Bid>();
+            foreach (var id in ids)
+            {
+                var b = await _mmsUnitOfWork.Bids.GetIncludeAllAsync(id);
+                if (b != null) enriched.Add(b);
+            }
+
+            var now = DateTime.Now;
+            return enriched
+                .OrderByDescending(b => b.CreatedDate)
+                .Select(b => _mapper.Map<BidDto>((b, language, now)))
+                .ToList();
+        }
+
         public async Task<BidDetailDto?> GetAsync(int id, LanguageDbEnum language)
         {
             var bid = await _mmsUnitOfWork.Bids.GetIncludeAllAsync(id);

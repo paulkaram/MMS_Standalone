@@ -104,6 +104,10 @@ const BidsService = {
     return axios.get(`bids/committee/${committeeId}`)
   },
 
+  listMine(): Promise<Bid[]> {
+    return axios.get('bids/my')
+  },
+
   getById(id: number): Promise<BidDetail> {
     return axios.get(`bids/${id}`)
   },

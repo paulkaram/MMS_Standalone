@@ -91,6 +91,7 @@ const TagSettings = () => import('@/pages/Admin/TagSettings.vue')
 const ExternalMembers = () => import('@/pages/Admin/ExternalMembers.vue')
 const Delegations = () => import('@/pages/Delegations.vue')
 const BidDetail = () => import('@/pages/BidDetail.vue')
+const Bids = () => import('@/pages/Bids.vue')
 const MomTemplateSettings = () => import('@/pages/Admin/MomTemplateSettings.vue')
 const MenuPermissions = () => import('@/pages/Admin/MenuPermissions.vue')
 const TasksConfiguration = () => import('@/pages/Admin/TasksConfiguration.vue')
@@ -289,6 +290,12 @@ const routes: RouteRecordRaw[] = [
     name: 'delegations',
     path: '/delegations',
     component: Delegations,
+    meta: { secure: true }
+  },
+  {
+    name: 'bids',
+    path: '/bids',
+    component: Bids,
     meta: { secure: true }
   },
   {

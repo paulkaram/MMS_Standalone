@@ -134,6 +134,12 @@ const allNavigationItems: NavigationItem[] = [
     icon: 'event_busy',
     to: '/not-related-meetings'
   },
+  {
+    name: 'Bids',
+    label: 'Bids',
+    icon: 'work_outline',
+    to: '/bids'
+  },
   // Work Section
   {
     name: 'header-work',
