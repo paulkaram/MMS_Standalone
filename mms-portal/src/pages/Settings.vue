@@ -170,6 +170,17 @@ const allSettingsItems: SettingsItem[] = [
     permissionName: 'ManageOrganization'
   },
   {
+    name: 'delegations',
+    label: 'Delegations',
+    fallback: 'التفويضات',
+    descKey: 'DelegationsDesc',
+    descFallback: 'إدارة تفويض الصلاحيات والمهام',
+    icon: 'mdi:handshake-outline',
+    iconClass: 'icon-teal',
+    to: '/delegations',
+    permissionName: ''
+  },
+  {
     name: 'mom-templates',
     label: 'MomTemplateSettings',
     fallback: 'قوالب المحضر',

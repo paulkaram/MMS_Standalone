@@ -171,6 +171,10 @@ public partial class MmsContext : DbContext
 
     public virtual DbSet<CommitteeExternalMember> CommitteeExternalMembers { get; set; }
 
+    public virtual DbSet<Delegation> Delegations { get; set; }
+
+    public virtual DbSet<DelegationTask> DelegationTasks { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<AccountType>(entity =>
@@ -1320,6 +1324,47 @@ public partial class MmsContext : DbContext
             entity.ToTable("ViewerToken");
             entity.Property(e => e.Token).HasMaxLength(50);
             entity.Property(e => e.Username).HasMaxLength(50);
+        });
+
+        modelBuilder.Entity<Delegation>(entity =>
+        {
+            entity.ToTable("Delegation");
+            entity.Property(e => e.Reason).HasMaxLength(500);
+            entity.Property(e => e.StartDate).HasColumnType("datetime");
+            entity.Property(e => e.EndDate).HasColumnType("datetime");
+            entity.Property(e => e.CreatedDate)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime");
+
+            entity.HasOne(d => d.FromUser).WithMany()
+                .HasForeignKey(d => d.FromUserId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Delegation_FromUser");
+
+            entity.HasOne(d => d.ToUser).WithMany()
+                .HasForeignKey(d => d.ToUserId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Delegation_ToUser");
+
+            entity.HasIndex(e => new { e.FromUserId, e.IsActive });
+            entity.HasIndex(e => new { e.ToUserId, e.IsActive });
+        });
+
+        modelBuilder.Entity<DelegationTask>(entity =>
+        {
+            entity.ToTable("DelegationTask");
+
+            entity.HasOne(d => d.Delegation).WithMany(p => p.DelegationTasks)
+                .HasForeignKey(d => d.DelegationId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("FK_DelegationTask_Delegation");
+
+            entity.HasOne(d => d.TaskNavigation).WithMany()
+                .HasForeignKey(d => d.TaskId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_DelegationTask_Task");
+
+            entity.HasIndex(e => new { e.DelegationId, e.TaskId }).IsUnique();
         });
 
         OnModelCreatingPartial(modelBuilder);
