@@ -23,6 +23,7 @@
 		SystemPermissions = 28,
 		SuperAdmin = 39,
         SystemIdentity = 40,
+		Bids = 49,
 	}
 	public enum CommitteePermissionDbEnum
 	{

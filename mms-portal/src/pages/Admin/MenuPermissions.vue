@@ -201,7 +201,8 @@ function getPermIcon(name: string): string {
     AttendanceReport: 'how_to_reg', Settings: 'settings', SessionRelated: 'co_present',
     NotLinkedMeeting: 'event_busy', SystemSettings: 'settings', Roles: 'shield',
     Dictionary: 'book', ManageOrganization: 'apartment',
-    VotingTypesSettings: 'how_to_vote'
+    VotingTypesSettings: 'how_to_vote',
+    Bids: 'work_outline'
   }
   return icons[name] || 'menu'
 }
