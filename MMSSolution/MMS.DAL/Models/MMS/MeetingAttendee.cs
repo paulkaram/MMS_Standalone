@@ -9,7 +9,9 @@ public partial class MeetingAttendee
 
     public int MeetingId { get; set; }
 
-    public string UserId { get; set; } = null!;
+    public string? UserId { get; set; }
+
+    public int? ExternalMemberId { get; set; }
 
     public bool NeedsApproval { get; set; }
 
@@ -19,5 +21,7 @@ public partial class MeetingAttendee
 
     public virtual Meeting Meeting { get; set; } = null!;
 
-    public virtual User User { get; set; } = null!;
+    public virtual User? User { get; set; }
+
+    public virtual ExternalMember? ExternalMember { get; set; }
 }

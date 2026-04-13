@@ -167,6 +167,10 @@ public partial class MmsContext : DbContext
 
     public virtual DbSet<TagLink> TagLinks { get; set; }
 
+    public virtual DbSet<ExternalMember> ExternalMembers { get; set; }
+
+    public virtual DbSet<CommitteeExternalMember> CommitteeExternalMembers { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<AccountType>(entity =>
@@ -658,8 +662,11 @@ public partial class MmsContext : DbContext
 
             entity.HasOne(d => d.User).WithMany(p => p.MeetingAttendees)
                 .HasForeignKey(d => d.UserId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_MeetingAttendees_User");
+
+            entity.HasOne(d => d.ExternalMember).WithMany(p => p.MeetingAttendees)
+                .HasForeignKey(d => d.ExternalMemberId)
+                .HasConstraintName("FK_MeetingAttendees_External");
         });
 
         modelBuilder.Entity<MeetingNote>(entity =>
@@ -1205,6 +1212,48 @@ public partial class MmsContext : DbContext
             entity.ToTable("CommitteeItemType");
             entity.Property(e => e.NameAr).HasMaxLength(200);
             entity.Property(e => e.NameEn).HasMaxLength(200);
+        });
+
+        modelBuilder.Entity<ExternalMember>(entity =>
+        {
+            entity.ToTable("ExternalMember");
+            entity.Property(e => e.FullnameAr).HasMaxLength(200);
+            entity.Property(e => e.FullnameEn).HasMaxLength(200);
+            entity.Property(e => e.Email).HasMaxLength(500);
+            entity.Property(e => e.Mobile).HasMaxLength(50);
+            entity.Property(e => e.Organization).HasMaxLength(300);
+            entity.Property(e => e.Position).HasMaxLength(200);
+            entity.Property(e => e.CreatedDate)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime");
+            entity.HasIndex(e => e.Email).IsUnique();
+        });
+
+        modelBuilder.Entity<CommitteeExternalMember>(entity =>
+        {
+            entity.ToTable("CommitteeExternalMember");
+            entity.Property(e => e.Note).HasMaxLength(500);
+            entity.Property(e => e.Active).HasDefaultValue(true);
+            entity.Property(e => e.CreatedDate)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime");
+
+            entity.HasOne(d => d.Committee).WithMany()
+                .HasForeignKey(d => d.CommitteeId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_CommitteeExternalMember_Committee");
+
+            entity.HasOne(d => d.ExternalMember).WithMany(p => p.CommitteeMemberships)
+                .HasForeignKey(d => d.ExternalMemberId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_CommitteeExternalMember_External");
+
+            entity.HasOne(d => d.CommitteeRole).WithMany()
+                .HasForeignKey(d => d.CommitteeRoleId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_CommitteeExternalMember_Role");
+
+            entity.HasIndex(e => new { e.CommitteeId, e.ExternalMemberId, e.CommitteeRoleId }).IsUnique();
         });
 
         modelBuilder.Entity<Tag>(entity =>

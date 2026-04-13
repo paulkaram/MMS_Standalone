@@ -48,6 +48,8 @@ namespace MMS.DAL.Data.UnitOfWork.MMS
 		public ICommitteeItemTypeRepository CommitteeItemTypes { get; private set; }
 		public ITagRepository Tags { get; private set; }
 		public ITagLinkRepository TagLinks { get; private set; }
+		public IExternalMemberRepository ExternalMembers { get; private set; }
+		public ICommitteeExternalMemberRepository CommitteeExternalMembers { get; private set; }
 		public IRoleMenuPermissionRepository RoleMenuPermissions { get; private set; }
 		public IGroupMenuPermissionRepository GroupMenuPermissions { get; private set; }
 		public IUserGroupRepository UserGroups { get; private set; }
@@ -89,6 +91,8 @@ namespace MMS.DAL.Data.UnitOfWork.MMS
 			CommitteeItemTypes = new CommitteeItemTypeRepository(context);
 			Tags = new TagRepository(context);
 			TagLinks = new TagLinkRepository(context);
+			ExternalMembers = new ExternalMemberRepository(context);
+			CommitteeExternalMembers = new CommitteeExternalMemberRepository(context);
 			RoleMenuPermissions = new RoleMenuPermissionRepository(context);
 			GroupMenuPermissions = new GroupMenuPermissionRepository(context);
 			UserGroups = new UserGroupRepository(context);

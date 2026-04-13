@@ -55,6 +55,7 @@ namespace MMS.BLL
 			services.AddScoped<SessionManager>();
 			services.AddScoped<CommitteeItemManager>();
 			services.AddScoped<TagManager>();
+			services.AddScoped<ExternalMemberManager>();
 
 
 			return services;

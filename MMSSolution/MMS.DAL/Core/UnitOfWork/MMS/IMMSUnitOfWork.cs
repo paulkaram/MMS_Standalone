@@ -35,6 +35,8 @@ namespace MMS.DAL.Core.UnitOfWork.MMS
 		ICommitteeItemTypeRepository CommitteeItemTypes { get; }
 		ITagRepository Tags { get; }
 		ITagLinkRepository TagLinks { get; }
+		IExternalMemberRepository ExternalMembers { get; }
+		ICommitteeExternalMemberRepository CommitteeExternalMembers { get; }
 		IRoleMenuPermissionRepository RoleMenuPermissions { get; }
 		IGroupMenuPermissionRepository GroupMenuPermissions { get; }
 		IUserGroupRepository UserGroups { get; }

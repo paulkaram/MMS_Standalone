@@ -159,6 +159,17 @@ const allSettingsItems: SettingsItem[] = [
     permissionName: 'SystemSettings'
   },
   {
+    name: 'external-members',
+    label: 'ExternalMembers',
+    fallback: 'الأعضاء الخارجيون',
+    descKey: 'ExternalMembersDesc',
+    descFallback: 'إدارة الأعضاء الخارجيين بدون حسابات',
+    icon: 'mdi:account-multiple-outline',
+    iconClass: 'icon-navy',
+    to: '/external-members',
+    permissionName: 'ManageOrganization'
+  },
+  {
     name: 'mom-templates',
     label: 'MomTemplateSettings',
     fallback: 'قوالب المحضر',

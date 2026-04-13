@@ -88,6 +88,7 @@ const CouncilsAndCommittees = () => import('@/pages/Admin/CouncilsAndCommittees.
 const VotingTypeSettings = () => import('@/pages/Admin/VotingTypeSettings.vue')
 const CommitteeItemTypeSettings = () => import('@/pages/Admin/CommitteeItemTypeSettings.vue')
 const TagSettings = () => import('@/pages/Admin/TagSettings.vue')
+const ExternalMembers = () => import('@/pages/Admin/ExternalMembers.vue')
 const MomTemplateSettings = () => import('@/pages/Admin/MomTemplateSettings.vue')
 const MenuPermissions = () => import('@/pages/Admin/MenuPermissions.vue')
 const TasksConfiguration = () => import('@/pages/Admin/TasksConfiguration.vue')
@@ -274,6 +275,12 @@ const routes: RouteRecordRaw[] = [
     name: 'tags',
     path: '/tags',
     component: TagSettings,
+    meta: { secure: true, permission: 'admin' }
+  },
+  {
+    name: 'external-members',
+    path: '/external-members',
+    component: ExternalMembers,
     meta: { secure: true, permission: 'admin' }
   },
   {
