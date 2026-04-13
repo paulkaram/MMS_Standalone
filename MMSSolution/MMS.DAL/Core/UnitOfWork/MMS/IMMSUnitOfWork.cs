@@ -39,6 +39,10 @@ namespace MMS.DAL.Core.UnitOfWork.MMS
 		ICommitteeExternalMemberRepository CommitteeExternalMembers { get; }
 		IDelegationRepository Delegations { get; }
 		IDelegationTaskRepository DelegationTasks { get; }
+		IBidRepository Bids { get; }
+		IBidStatusRepository BidStatuses { get; }
+		IBidStakeholderRepository BidStakeholders { get; }
+		IBidStatusHistoryRepository BidStatusHistory { get; }
 		IRoleMenuPermissionRepository RoleMenuPermissions { get; }
 		IGroupMenuPermissionRepository GroupMenuPermissions { get; }
 		IUserGroupRepository UserGroups { get; }

@@ -52,6 +52,10 @@ namespace MMS.DAL.Data.UnitOfWork.MMS
 		public ICommitteeExternalMemberRepository CommitteeExternalMembers { get; private set; }
 		public IDelegationRepository Delegations { get; private set; }
 		public IDelegationTaskRepository DelegationTasks { get; private set; }
+		public IBidRepository Bids { get; private set; }
+		public IBidStatusRepository BidStatuses { get; private set; }
+		public IBidStakeholderRepository BidStakeholders { get; private set; }
+		public IBidStatusHistoryRepository BidStatusHistory { get; private set; }
 		public IRoleMenuPermissionRepository RoleMenuPermissions { get; private set; }
 		public IGroupMenuPermissionRepository GroupMenuPermissions { get; private set; }
 		public IUserGroupRepository UserGroups { get; private set; }
@@ -97,6 +101,10 @@ namespace MMS.DAL.Data.UnitOfWork.MMS
 			CommitteeExternalMembers = new CommitteeExternalMemberRepository(context);
 			Delegations = new DelegationRepository(context);
 			DelegationTasks = new DelegationTaskRepository(context);
+			Bids = new BidRepository(context);
+			BidStatuses = new BidStatusRepository(context);
+			BidStakeholders = new BidStakeholderRepository(context);
+			BidStatusHistory = new BidStatusHistoryRepository(context);
 			RoleMenuPermissions = new RoleMenuPermissionRepository(context);
 			GroupMenuPermissions = new GroupMenuPermissionRepository(context);
 			UserGroups = new UserGroupRepository(context);

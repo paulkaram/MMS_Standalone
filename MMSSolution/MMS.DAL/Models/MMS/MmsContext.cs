@@ -175,6 +175,14 @@ public partial class MmsContext : DbContext
 
     public virtual DbSet<DelegationTask> DelegationTasks { get; set; }
 
+    public virtual DbSet<Bid> Bids { get; set; }
+
+    public virtual DbSet<BidStatus> BidStatuses { get; set; }
+
+    public virtual DbSet<BidStakeholder> BidStakeholders { get; set; }
+
+    public virtual DbSet<BidStatusHistory> BidStatusHistory { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<AccountType>(entity =>
@@ -1317,6 +1325,10 @@ public partial class MmsContext : DbContext
                 .HasForeignKey(d => d.CreatedBy)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_CommitteeItem_CreatedBy");
+
+            entity.HasOne(d => d.Bid).WithMany(p => p.Items)
+                .HasForeignKey(d => d.BidId)
+                .HasConstraintName("FK_CommitteeItem_Bid");
         });
 
         modelBuilder.Entity<ViewerToken>(entity =>
@@ -1365,6 +1377,102 @@ public partial class MmsContext : DbContext
                 .HasConstraintName("FK_DelegationTask_Task");
 
             entity.HasIndex(e => new { e.DelegationId, e.TaskId }).IsUnique();
+        });
+
+        modelBuilder.Entity<BidStatus>(entity =>
+        {
+            entity.ToTable("BidStatus");
+            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.NameAr).HasMaxLength(100);
+            entity.Property(e => e.NameEn).HasMaxLength(100);
+        });
+
+        modelBuilder.Entity<Bid>(entity =>
+        {
+            entity.ToTable("Bid");
+            entity.Property(e => e.ReferenceNumber).HasMaxLength(50);
+            entity.Property(e => e.ExternalMeetingNumber).HasMaxLength(200);
+            entity.Property(e => e.Subject).HasMaxLength(500);
+            entity.Property(e => e.InitialMinutesPath).HasMaxLength(4000);
+            entity.Property(e => e.FinalMinutesPath).HasMaxLength(4000);
+            entity.Property(e => e.StartDate).HasColumnType("datetime");
+            entity.Property(e => e.DueDate).HasColumnType("datetime");
+            entity.Property(e => e.CreatedDate)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime");
+            entity.Property(e => e.StatusId).HasDefaultValue(1);
+
+            entity.HasOne(d => d.Committee).WithMany()
+                .HasForeignKey(d => d.CommitteeId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Bid_Committee");
+
+            entity.HasOne(d => d.Status).WithMany(p => p.Bids)
+                .HasForeignKey(d => d.StatusId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Bid_Status");
+
+            entity.HasOne(d => d.TeamLeader).WithMany()
+                .HasForeignKey(d => d.TeamLeaderUserId)
+                .HasConstraintName("FK_Bid_TeamLeader");
+
+            entity.HasOne(d => d.Meeting).WithMany()
+                .HasForeignKey(d => d.MeetingId)
+                .HasConstraintName("FK_Bid_Meeting");
+
+            entity.HasOne(d => d.CreatedByNavigation).WithMany()
+                .HasForeignKey(d => d.CreatedBy)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Bid_CreatedBy");
+        });
+
+        modelBuilder.Entity<BidStakeholder>(entity =>
+        {
+            entity.ToTable("BidStakeholder");
+            entity.Property(e => e.CreatedDate)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime");
+
+            entity.HasOne(d => d.Bid).WithMany(p => p.Stakeholders)
+                .HasForeignKey(d => d.BidId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("FK_BidStakeholder_Bid");
+
+            entity.HasOne(d => d.User).WithMany()
+                .HasForeignKey(d => d.UserId)
+                .HasConstraintName("FK_BidStakeholder_User");
+
+            entity.HasOne(d => d.ExternalMember).WithMany()
+                .HasForeignKey(d => d.ExternalMemberId)
+                .HasConstraintName("FK_BidStakeholder_External");
+        });
+
+        modelBuilder.Entity<BidStatusHistory>(entity =>
+        {
+            entity.ToTable("BidStatusHistory");
+            entity.Property(e => e.Note).HasMaxLength(1000);
+            entity.Property(e => e.ChangedDate)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime");
+
+            entity.HasOne(d => d.Bid).WithMany(p => p.StatusHistory)
+                .HasForeignKey(d => d.BidId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("FK_BidStatusHistory_Bid");
+
+            entity.HasOne(d => d.FromStatus).WithMany()
+                .HasForeignKey(d => d.FromStatusId)
+                .HasConstraintName("FK_BidStatusHistory_FromStatus");
+
+            entity.HasOne(d => d.ToStatus).WithMany()
+                .HasForeignKey(d => d.ToStatusId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_BidStatusHistory_ToStatus");
+
+            entity.HasOne(d => d.ChangedByNavigation).WithMany()
+                .HasForeignKey(d => d.ChangedBy)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_BidStatusHistory_User");
         });
 
         OnModelCreatingPartial(modelBuilder);

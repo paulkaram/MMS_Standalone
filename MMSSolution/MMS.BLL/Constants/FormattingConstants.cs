@@ -6,6 +6,7 @@
 
 		public const string SessionReferenceNumberPrefix = "SES";
 		public const string CommitteeItemReferenceNumberPrefix = "ITM";
+		public const string BidReferenceNumberPrefix = "BID";
 		public const string DefaultTagColor = "#006d4b";
 	}
 }

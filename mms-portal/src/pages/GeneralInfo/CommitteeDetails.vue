@@ -24,6 +24,7 @@
         <StatCard v-if="permissions.committeeActivities" :title="$t('Activities')" :value="stats.activities" icon="mdi:chart-timeline" color="success" />
         <StatCard v-if="permissions.committeeAttachments" :title="$t('Attachments')" :value="stats.attachments" icon="mdi:attachment" color="secondary" />
         <StatCard v-if="permissions.committeeItems" :title="$t('Items')" :value="stats.items" icon="mdi:format-list-bulleted" color="primary" />
+        <StatCard :title="$t('Bids')" :value="stats.bids" icon="mdi:briefcase-outline" color="warning" />
       </div>
 
       <!-- Dashboard Grid -->
@@ -88,6 +89,18 @@
           </div>
         </section>
 
+        <!-- Bids -->
+        <section class="cd-card cd-bids">
+          <div class="cd-card-header">
+            <div class="cd-card-icon bids"><Icon icon="mdi:briefcase-outline" class="w-4 h-4" /></div>
+            <h3>{{ $t('Bids') }}</h3>
+            <span class="cd-card-badge">{{ stats.bids }}</span>
+          </div>
+          <div class="cd-card-body">
+            <CommitteeBids :committee-id="committeeId" @update:count="stats.bids = $event" />
+          </div>
+        </section>
+
         <!-- Attachments -->
         <section v-if="permissions.committeeAttachments" class="cd-card cd-attachments">
           <div class="cd-card-header">
@@ -126,6 +139,7 @@ import CommitteeRecommendations from '@/components/app/generalInfo/CommitteeReco
 import CommitteeActivities from '@/components/app/generalInfo/CommitteeActivities.vue'
 import CommitteeAttachments from '@/components/app/generalInfo/CommitteeAttachments.vue'
 import CommitteeItems from '@/components/app/generalInfo/CommitteeItems.vue'
+import CommitteeBids from '@/components/app/generalInfo/CommitteeBids.vue'
 import CouncilCommitteesService from '@/services/CouncilCommitteesService'
 
 const route = useRoute()
@@ -151,7 +165,8 @@ const stats = ref({
   recommendationsProgress: 0,
   activities: 0,
   attachments: 0,
-  items: 0
+  items: 0,
+  bids: 0
 })
 
 // Computed

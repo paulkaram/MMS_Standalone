@@ -6,6 +6,8 @@ public partial class CommitteeItem
 
     public int CommitteeId { get; set; }
 
+    public int? BidId { get; set; }
+
     public string ReferenceNumber { get; set; } = null!;
 
     public string? ExternalReferenceNumber { get; set; }
@@ -29,6 +31,8 @@ public partial class CommitteeItem
     public DateTime CreatedDate { get; set; }
 
     public virtual Committee Committee { get; set; } = null!;
+
+    public virtual Bid? Bid { get; set; }
 
     public virtual CommitteeItemType ItemType { get; set; } = null!;
 

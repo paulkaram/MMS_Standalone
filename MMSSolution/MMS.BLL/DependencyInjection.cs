@@ -57,6 +57,7 @@ namespace MMS.BLL
 			services.AddScoped<TagManager>();
 			services.AddScoped<ExternalMemberManager>();
 			services.AddScoped<DelegationManager>();
+			services.AddScoped<BidManager>();
 
 
 			return services;
