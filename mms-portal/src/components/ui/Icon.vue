@@ -1,7 +1,7 @@
 <template>
   <span
     class="material-symbols-outlined icon-ms"
-    :class="className"
+    :class="[className, { 'icon-rtl-flip': needsRtlFlip }]"
     :style="sizeStyle"
   >{{ materialIcon }}</span>
 </template>
@@ -160,6 +160,8 @@ const iconMap: Record<string, string> = {
   'mdi:account-off': 'person_off',
   'mdi:account-off-outline': 'person_off',
   'mdi:account-key': 'key',
+  'mdi:account-tie': 'badge',
+  'mdi:account-tie-outline': 'badge',
   'mdi:shield-account': 'admin_panel_settings',
   'mdi:badge-account': 'badge',
   'mdi:account-multiple': 'group',
@@ -440,6 +442,17 @@ const iconMap: Record<string, string> = {
   'mdi:arrow-down-bold-circle-outline': 'arrow_circle_down',
   'mdi:arrow-up-circle': 'arrow_circle_up',
   'mdi:arrow-down-circle': 'arrow_circle_down',
+  'mdi:arrow-left-bold': 'arrow_back',
+  'mdi:arrow-right-bold': 'arrow_forward',
+  'mdi:arrow-up-bold': 'arrow_upward',
+  'mdi:arrow-down-bold': 'arrow_downward',
+  'mdi:transit-connection-variant': 'swap_horiz',
+  'mdi:timeline-check': 'fact_check',
+  'mdi:timeline-check-outline': 'fact_check',
+  'mdi:timeline-text': 'timeline',
+  'mdi:timeline-text-outline': 'timeline',
+  'mdi:timeline-outline': 'timeline',
+  'mdi:timeline': 'timeline',
   'mdi:comment-text-outline': 'comment',
   'mdi:clipboard-list-outline': 'assignment',
   'mdi:calendar-range': 'date_range',
@@ -585,6 +598,16 @@ const materialIcon = computed(() => {
   // Already a material symbols name
   return iconName
 })
+
+// Material Symbols ships LTR-only glyphs for these — they need to mirror in RTL
+// pages so e.g. a "send" icon points the same way the text reads.
+const DIRECTIONAL_ICONS = new Set([
+  'send', 'reply', 'forward', 'forward_to_inbox', 'navigate_next', 'navigate_before',
+  'arrow_forward', 'arrow_back', 'arrow_right_alt', 'arrow_left_alt',
+  'subdirectory_arrow_right', 'subdirectory_arrow_left',
+  'undo', 'redo', 'open_in_new', 'launch', 'logout', 'login'
+])
+const needsRtlFlip = computed(() => DIRECTIONAL_ICONS.has(materialIcon.value))
 </script>
 
 <style scoped>
@@ -593,5 +616,12 @@ const materialIcon = computed(() => {
   align-items: center;
   justify-content: center;
   line-height: 1;
+}
+</style>
+
+<!-- Unscoped: flip directional Material Symbols glyphs in RTL contexts -->
+<style>
+[dir="rtl"] .icon-ms.icon-rtl-flip {
+  transform: scaleX(-1);
 }
 </style>

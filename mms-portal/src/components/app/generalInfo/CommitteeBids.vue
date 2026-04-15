@@ -95,21 +95,35 @@
           </div>
           <div class="form-field">
             <label>{{ $t('TeamLeader') }}</label>
-            <select v-model="form.teamLeaderUserId" class="form-input">
-              <option :value="null">-</option>
-              <option v-for="u in users" :key="u.id" :value="u.id">{{ u.name }}</option>
-            </select>
+            <CustomSelect
+              v-model="form.teamLeaderUserId"
+              :options="users"
+              value-key="id"
+              label-key="name"
+              :placeholder="$t('Select') || '-'"
+              searchable
+              clearable
+            />
           </div>
         </div>
 
         <div class="form-row">
           <div class="form-field">
             <label>{{ $t('StartDate') }} <span class="required">*</span></label>
-            <input v-model="form.startDate" type="date" class="form-input" required />
+            <DatePicker
+              v-model="form.startDate"
+              :placeholder="$t('StartDate')"
+              required
+            />
           </div>
           <div class="form-field">
             <label>{{ $t('DueDate') }} <span class="required">*</span></label>
-            <input v-model="form.dueDate" type="date" class="form-input" required />
+            <DatePicker
+              v-model="form.dueDate"
+              :min-date="form.startDate || undefined"
+              :placeholder="$t('DueDate')"
+              required
+            />
           </div>
         </div>
 
@@ -132,8 +146,9 @@ import { ref, computed, reactive, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import Icon from '@/components/ui/Icon.vue'
 import Modal from '@/components/ui/Modal.vue'
+import CustomSelect from '@/components/ui/CustomSelect.vue'
+import DatePicker from '@/components/ui/DatePicker.vue'
 import BidsService, { type Bid, type BidPost, BidStatus } from '@/services/BidsService'
-import UsersService from '@/services/UsersService'
 import { useToast } from '@/composables/useToast'
 import { useI18n } from 'vue-i18n'
 
@@ -156,7 +171,13 @@ const editingBid = ref<Bid | null>(null)
 
 const committeeIdNum = computed(() => Number(props.committeeId))
 
-const emptyForm = (): BidPost => ({
+// Form type — date fields accept Date from DatePicker or string from initial value
+type BidFormModel = Omit<BidPost, 'startDate' | 'dueDate'> & {
+  startDate: string | Date | null
+  dueDate: string | Date | null
+}
+
+const emptyForm = (): BidFormModel => ({
   committeeId: committeeIdNum.value,
   externalMeetingNumber: null,
   subject: '',
@@ -167,7 +188,18 @@ const emptyForm = (): BidPost => ({
   stakeholders: []
 })
 
-const form = reactive<BidPost>(emptyForm())
+const form = reactive<BidFormModel>(emptyForm())
+
+// Normalize a Date|string|null to YYYY-MM-DD for the backend
+const toIsoDate = (v: string | Date | null | undefined): string => {
+  if (!v) return ''
+  const d = v instanceof Date ? v : new Date(v)
+  if (isNaN(d.getTime())) return ''
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
+}
 
 const load = async () => {
   if (!committeeIdNum.value) return
@@ -183,9 +215,10 @@ const load = async () => {
   }
 }
 
+/** Scoped to the committee this panel is rendered for — no system-wide users. */
 const loadUsers = async () => {
   try {
-    const res: any = await UsersService.searchUsers('')
+    const res: any = await BidsService.listCommitteeMembersForPicker(committeeIdNum.value)
     users.value = (res?.data ?? res ?? []).map((u: any) => ({ id: String(u.id), name: u.name }))
   } catch {
     users.value = []
@@ -206,11 +239,16 @@ const saveBid = async () => {
   if (!form.subject.trim()) return
   saving.value = true
   try {
+    const payload: BidPost = {
+      ...form,
+      startDate: toIsoDate(form.startDate),
+      dueDate: toIsoDate(form.dueDate)
+    }
     if (editingBid.value) {
-      await BidsService.update(editingBid.value.id, form)
+      await BidsService.update(editingBid.value.id, payload)
       toast.success(t('BidUpdatedSuccessfully'))
     } else {
-      await BidsService.create(form)
+      await BidsService.create(payload)
       toast.success(t('BidCreatedSuccessfully'))
     }
     modalOpen.value = false

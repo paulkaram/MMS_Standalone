@@ -104,8 +104,16 @@ namespace MMS.API.Common
 		}
 		protected IActionResult ErrorResponse(Exception ex)
 		{
-			// Don't expose internal exception details to clients
-			return StatusCode(500, new ApiResponseDto<object>(Success: false, Message: "An error occurred while processing your request."));
+			// Log to stderr so the API process shows the real stack trace
+			Console.Error.WriteLine($"[ErrorResponse] {ex.GetType().Name}: {ex.Message}");
+			if (ex.InnerException != null)
+				Console.Error.WriteLine($"  inner: {ex.InnerException.GetType().Name}: {ex.InnerException.Message}");
+			Console.Error.WriteLine(ex.StackTrace);
+
+			// Surface the real message in the response — helpful during active dev.
+			// When you want to hide details again, revert to the generic string.
+			var detail = ex.InnerException?.Message ?? ex.Message;
+			return StatusCode(500, new ApiResponseDto<object>(Success: false, Message: detail));
 		}
 
 		protected FileStatusEnum IsPng(IFormFile file)

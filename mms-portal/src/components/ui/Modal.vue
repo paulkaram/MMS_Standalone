@@ -146,16 +146,16 @@ const panelClasses = computed(() => {
     'bg-white shadow-2xl ring-1 ring-black/5 transition-all'
   ]
 
-  // Size variants
+  // Size variants — comfortable but not sprawling.
   const sizes: Record<string, string> = {
-    sm: 'max-w-sm',
-    md: 'max-w-md',
-    lg: 'max-w-lg',
-    xl: 'max-w-xl',
-    '2xl': 'max-w-2xl',
-    '3xl': 'max-w-3xl',
-    '4xl': 'max-w-4xl',
-    full: 'max-w-[90vw] min-h-[80vh]'
+    sm:    'max-w-[420px]',
+    md:    'max-w-[560px]',
+    lg:    'max-w-[720px]',
+    xl:    'max-w-[880px]',
+    '2xl': 'max-w-[1000px]',
+    '3xl': 'max-w-[1140px]',
+    '4xl': 'max-w-[1280px]',
+    full:  'max-w-[95vw] min-h-[80vh]'
   }
 
   return [...base, sizes[props.size]]

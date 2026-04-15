@@ -56,11 +56,25 @@ namespace MMS.DAL.Data.UnitOfWork.MMS
 		public IBidStatusRepository BidStatuses { get; private set; }
 		public IBidStakeholderRepository BidStakeholders { get; private set; }
 		public IBidStatusHistoryRepository BidStatusHistory { get; private set; }
+		public IBidItemVisionRepository BidItemVisions { get; private set; }
+		public IBidMinutesOpinionRepository BidMinutesOpinions { get; private set; }
+		public IBidItemTypeRepository BidItemTypes { get; private set; }
+		public IProcurementProjectRepository ProcurementProjects { get; private set; }
+		public ICompetitorRepository Competitors { get; private set; }
+		public ICompetitorAttachmentRepository CompetitorAttachments { get; private set; }
+		public IWorkflowTemplateRepository WorkflowTemplates { get; private set; }
+		public IWorkflowStepRepository WorkflowSteps { get; private set; }
+		public IWorkflowTransitionRepository WorkflowTransitions { get; private set; }
+		public IWorkflowInstanceRepository WorkflowInstances { get; private set; }
+		public IWorkflowTaskRepository WorkflowTasks { get; private set; }
+		public IWorkflowHistoryRepository WorkflowHistory { get; private set; }
 		public IRoleMenuPermissionRepository RoleMenuPermissions { get; private set; }
 		public IGroupMenuPermissionRepository GroupMenuPermissions { get; private set; }
 		public IUserGroupRepository UserGroups { get; private set; }
 		public IUserRoleRepository UserRoles { get; private set; }
 		public IRoleRepository Roles { get; private set; }
+		public IGroupRepository Groups { get; private set; }
+		public ICommitteeRoleRepository CommitteeRoles { get; private set; }
 		public IViewerTokenRepository ViewerTokens { get; private set; }
 
 
@@ -105,11 +119,25 @@ namespace MMS.DAL.Data.UnitOfWork.MMS
 			BidStatuses = new BidStatusRepository(context);
 			BidStakeholders = new BidStakeholderRepository(context);
 			BidStatusHistory = new BidStatusHistoryRepository(context);
+			BidItemVisions = new BidItemVisionRepository(context);
+			BidMinutesOpinions = new BidMinutesOpinionRepository(context);
+			BidItemTypes = new BidItemTypeRepository(context);
+			ProcurementProjects = new ProcurementProjectRepository(context);
+			Competitors = new CompetitorRepository(context);
+			CompetitorAttachments = new CompetitorAttachmentRepository(context);
+			WorkflowTemplates = new WorkflowTemplateRepository(context);
+			WorkflowSteps = new WorkflowStepRepository(context);
+			WorkflowTransitions = new WorkflowTransitionRepository(context);
+			WorkflowInstances = new WorkflowInstanceRepository(context);
+			WorkflowTasks = new WorkflowTaskRepository(context);
+			WorkflowHistory = new WorkflowHistoryRepository(context);
 			RoleMenuPermissions = new RoleMenuPermissionRepository(context);
 			GroupMenuPermissions = new GroupMenuPermissionRepository(context);
 			UserGroups = new UserGroupRepository(context);
 			UserRoles = new UserRoleRepository(context);
 			Roles = new RoleRepository(context);
+			Groups = new GroupRepository(context);
+			CommitteeRoles = new CommitteeRoleRepository(context);
 			ViewerTokens = new ViewerTokenRepository(context);
 
         }

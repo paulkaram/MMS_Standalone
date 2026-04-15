@@ -130,8 +130,11 @@ namespace MMS.BLL.Managers
         public async Task<List<CommitteeItemTypeDto>> ListItemTypesAdminAsync()
         {
             var types = await _mmsUnitOfWork.CommitteeItemTypes.ListAsync();
+            // Bid items have `ItemTypeId = null`; filter them out of the usage count
+            // before building the dictionary — otherwise the null key throws.
             var usage = (await _mmsUnitOfWork.CommitteeItems.ListAsync())
-                .GroupBy(i => i.ItemTypeId)
+                .Where(i => i.ItemTypeId.HasValue)
+                .GroupBy(i => i.ItemTypeId!.Value)
                 .ToDictionary(g => g.Key, g => g.Count());
 
             return types

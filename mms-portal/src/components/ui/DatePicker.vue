@@ -251,9 +251,30 @@ const panelStyle = ref<Record<string, string>>({
 const updatePanelPosition = () => {
   if (!buttonRef.value?.$el) return
   const rect = buttonRef.value.$el.getBoundingClientRect()
+  const viewportH = window.innerHeight
+  const viewportW = window.innerWidth
+
+  // Approximate panel size — header + 6 weeks + footer (h-72 width = 288px)
+  const PANEL_H = 360
+  const PANEL_W = 288
+  const GAP = 8
+
+  // Vertical: prefer below; flip above if it would clip the viewport bottom
+  const spaceBelow = viewportH - rect.bottom
+  const openAbove = spaceBelow < PANEL_H + GAP && rect.top > PANEL_H + GAP
+  const top = openAbove
+    ? Math.max(GAP, rect.top - PANEL_H - GAP)
+    : rect.bottom + GAP
+
+  // Horizontal: clamp so the panel never spills off the right edge
+  let left = rect.left
+  if (left + PANEL_W > viewportW - GAP) {
+    left = Math.max(GAP, viewportW - PANEL_W - GAP)
+  }
+
   panelStyle.value = {
-    top: `${rect.bottom + 8}px`,
-    left: `${rect.left}px`,
+    top: `${top}px`,
+    left: `${left}px`,
     zIndex: '99999'
   }
 }

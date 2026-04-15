@@ -8,10 +8,17 @@ public class ValidateModelFilter : IActionFilter
 	{
 		if (!context.ModelState.IsValid)
 		{
-			// Customize the error response here
+			var errors = context.ModelState
+				.Where(kv => kv.Value?.Errors.Count > 0)
+				.ToDictionary(
+					kv => kv.Key,
+					kv => kv.Value!.Errors.Select(e => string.IsNullOrEmpty(e.ErrorMessage) ? e.Exception?.Message : e.ErrorMessage).ToArray()
+				);
+
 			var errorResponse = new
 			{
-				message = "One or more validation errors occurred. Please check your input."
+				message = "One or more validation errors occurred. Please check your input.",
+				errors
 			};
 
 			context.Result = new BadRequestObjectResult(errorResponse);

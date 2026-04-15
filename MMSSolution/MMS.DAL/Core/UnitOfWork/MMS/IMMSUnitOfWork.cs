@@ -43,11 +43,25 @@ namespace MMS.DAL.Core.UnitOfWork.MMS
 		IBidStatusRepository BidStatuses { get; }
 		IBidStakeholderRepository BidStakeholders { get; }
 		IBidStatusHistoryRepository BidStatusHistory { get; }
+		IBidItemVisionRepository BidItemVisions { get; }
+		IBidMinutesOpinionRepository BidMinutesOpinions { get; }
+		IBidItemTypeRepository BidItemTypes { get; }
+		IProcurementProjectRepository ProcurementProjects { get; }
+		ICompetitorRepository Competitors { get; }
+		ICompetitorAttachmentRepository CompetitorAttachments { get; }
+		IWorkflowTemplateRepository WorkflowTemplates { get; }
+		IWorkflowStepRepository WorkflowSteps { get; }
+		IWorkflowTransitionRepository WorkflowTransitions { get; }
+		IWorkflowInstanceRepository WorkflowInstances { get; }
+		IWorkflowTaskRepository WorkflowTasks { get; }
+		IWorkflowHistoryRepository WorkflowHistory { get; }
 		IRoleMenuPermissionRepository RoleMenuPermissions { get; }
 		IGroupMenuPermissionRepository GroupMenuPermissions { get; }
 		IUserGroupRepository UserGroups { get; }
 		IUserRoleRepository UserRoles { get; }
 		IRoleRepository Roles { get; }
+		IGroupRepository Groups { get; }
+		ICommitteeRoleRepository CommitteeRoles { get; }
 		IViewerTokenRepository ViewerTokens { get; }
 
 	}

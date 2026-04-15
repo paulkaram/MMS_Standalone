@@ -105,6 +105,17 @@
         <div class="spinner large"></div>
       </div>
 
+      <!-- Workflow task: dedicated panel (per RBAC engine) — replaces the meeting-task stepper -->
+      <WorkflowTaskPanel
+        v-else-if="selectedTask && isWorkflowTaskId(selectedTask.id)"
+        :bid-id="Number(selectedTask.meetingId)"
+        :bid-reference-number="selectedTask.meetingReference"
+        :bid-subject="selectedTask.meetingTitle"
+        :task-title="selectedTask.type"
+        :due-date="selectedTask.dueDate"
+        @advanced="loadTasks"
+      />
+
       <!-- Task Details -->
       <template v-else-if="showDetails && stepperItems.length > 0">
         <!-- Stepper Navigation -->
@@ -409,6 +420,12 @@ import MeetingTasksService from '@/services/MeetingTasksService'
 import MeetingsService from '@/services/MeetingsService'
 import AnnotationsService, { AnnotationType, type StampDto } from '@/services/AnnotationsService'
 import type { MeetingTask } from '@/services/MeetingTasksService'
+import VisionsService, { VisionStatus } from '@/services/VisionsService'
+import { WorkflowService, WorkflowTaskStatus, type WorkflowTask as WfTask } from '@/services/WorkflowService'
+import WorkflowTaskPanel from '@/components/app/tasks/WorkflowTaskPanel.vue'
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
 
 const { t, locale } = useI18n()
 
@@ -416,8 +433,16 @@ const TaskTypeEnum = {
   MeetingApproval: 1,
   InitialMeetingAgendaApproval: 2,
   InitialMeetingMinutesApproval: 3,
-  SignFinalMeetingMinutes: 4
+  SignFinalMeetingMinutes: 4,
+  BidVision: 5,        // Stakeholder vision/review on a bid item (§5.8)
+  WorkflowTask: 6      // Generic RBAC workflow task (any bid step)
 }
+
+// Synthetic task-id prefixes — distinguish source so showTaskData can route correctly
+const VISION_TASK_ID_PREFIX = 'vision:'
+const WORKFLOW_TASK_ID_PREFIX = 'wf:'
+const isVisionTaskId = (id: string | number) => typeof id === 'string' && id.startsWith(VISION_TASK_ID_PREFIX)
+const isWorkflowTaskId = (id: string | number) => typeof id === 'string' && id.startsWith(WORKFLOW_TASK_ID_PREFIX)
 
 interface StepperItem {
   id: number
@@ -445,6 +470,8 @@ const getTaskTypeClass = (typeId: number) => {
     case 2: return 'type-agenda'
     case 3: return 'type-minutes'
     case 4: return 'type-signature'
+    case 5: return 'type-vision'
+    case 6: return 'type-workflow'
     default: return 'type-default'
   }
 }
@@ -554,11 +581,53 @@ const attachmentParams = computed(() => {
 const loadTasks = async () => {
   loading.value = true
   try {
-    const response = await MeetingTasksService.listTasks(page.value, pageSize.value)
-    const data = response.data || response
-    tasks.value = data.data || []
-    totalCount.value = data.total || 0
-    totalPages.value = Math.ceil((data.total || 0) / pageSize.value)
+    // Fetch in parallel: meeting tasks + bid visions + RBAC workflow tasks.
+    // Each source is independent — a failure in one shouldn't kill the others.
+    const [tasksResponse, visions, wfTasks] = await Promise.all([
+      MeetingTasksService.listTasks(page.value, pageSize.value),
+      VisionsService.listMine().catch(() => []),
+      WorkflowService.myTasks(false).catch((): WfTask[] => [])
+    ])
+
+    const data: any = (tasksResponse as any).data || tasksResponse
+    const meetingTasks: MeetingTask[] = data.data || []
+
+    // Vision tasks (per-bid-item)
+    const visionTasks: MeetingTask[] = (visions || [])
+      .filter(v => v.statusId === VisionStatus.Draft)
+      .map(v => ({
+        id: `${VISION_TASK_ID_PREFIX}${v.id}`,
+        type: t('BidVisionTaskType') || 'Bid Vision',
+        typeId: TaskTypeEnum.BidVision,
+        status: 'Pending',
+        meetingId: v.bidId,
+        meetingTitle: v.bidItemTitle || t('BidItem') || 'Bid Item',
+        meetingReference: `BID-${v.bidId} · ${t('Item')} #${v.bidItemId}`,
+        claimed: false,
+        isDelayed: false,
+        createdAt: v.createdDate
+      }))
+
+    // RBAC workflow tasks (per-bid-step) — these are the real DB rows from WorkflowTask
+    const workflowTasks: MeetingTask[] = (wfTasks || [])
+      .filter(t => t.statusId === WorkflowTaskStatus.Pending || t.statusId === WorkflowTaskStatus.InProgress)
+      .map(wt => ({
+        id: `${WORKFLOW_TASK_ID_PREFIX}${wt.id}`,
+        type: wt.taskTitle || wt.stepName || t('BidWorkflowTask') || 'Workflow Task',
+        typeId: TaskTypeEnum.WorkflowTask,
+        status: wt.statusName,
+        meetingId: wt.bidId,
+        meetingTitle: wt.bidSubject || wt.taskTitle || wt.stepName,
+        meetingReference: wt.bidReferenceNumber || `BID-${wt.bidId}`,
+        claimed: wt.statusId === WorkflowTaskStatus.InProgress,
+        isDelayed: wt.isDelayed,
+        createdAt: wt.createdDate,
+        dueDate: wt.dueDate || undefined
+      }))
+
+    tasks.value = [...workflowTasks, ...visionTasks, ...meetingTasks]
+    totalCount.value = (data.total || 0) + visionTasks.length + workflowTasks.length
+    totalPages.value = Math.ceil(totalCount.value / pageSize.value)
   } catch (error) {
     console.error('Failed to load tasks:', error)
     tasks.value = []
@@ -575,6 +644,21 @@ const handlePageChange = (newPage: number) => {
 
 const showTaskData = async (task: MeetingTask) => {
   if (selectedTaskId.value === task.id) return
+
+  // Workflow tasks render inline via WorkflowTaskPanel — no navigation away
+  if (isWorkflowTaskId(task.id)) {
+    selectedTaskId.value = task.id
+    selectedTask.value = task
+    showDetails.value = false  // suppress the meeting-task stepper; the v-else-if at the top picks up
+    loadingDetails.value = false
+    return
+  }
+
+  // Vision tasks still route to bid detail (the per-item submission UI lives there)
+  if (isVisionTaskId(task.id)) {
+    router.push(`/bids/${task.meetingId}`)
+    return
+  }
 
   claimTask(task)
   loadingDetails.value = true
@@ -1148,6 +1232,16 @@ onMounted(() => {
 .task-type-badge.type-signature {
   background: rgba(245, 158, 11, 0.1);
   color: #f59e0b;
+}
+
+.task-type-badge.type-vision {
+  background: rgba(99, 165, 143, 0.12);
+  color: #006d4b;
+}
+
+.task-type-badge.type-workflow {
+  background: rgba(0, 109, 75, 0.12);
+  color: #004f37;
 }
 
 .task-type-badge.type-default {

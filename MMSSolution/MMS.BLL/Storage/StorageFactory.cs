@@ -68,6 +68,11 @@ namespace MMS.BLL.Storage
             return $"Sessions/{DateTime.Now.Year}/{DateTime.Now.Month}/{DateTime.Now.Day}/{sessionId}/";
         }
 
+        public static string GetBidDirectory(int bidId)
+        {
+            return $"Bids/{DateTime.Now.Year}/{DateTime.Now.Month}/{DateTime.Now.Day}/{bidId}/";
+        }
+
         public string GetProfilePictureDirectory(string UserId)
 		{
 			return $"ProfilePictures/{UserId}/";

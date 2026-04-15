@@ -29,6 +29,25 @@ namespace MMS.BLL.Managers
                 .ToList();
         }
 
+        /// <summary>
+        /// Picker-friendly tag list — same shape as ListAsync but adds the color
+        /// so the picker UI can render colored dots without needing the admin
+        /// endpoint (which is permission-gated).
+        /// </summary>
+        public async Task<List<TagPickerDto>> ListForPickerAsync(LanguageDbEnum language)
+        {
+            var tags = await _mmsUnitOfWork.Tags.ListAsync();
+            return tags
+                .OrderBy(t => language == LanguageDbEnum.Arabic ? t.NameAr : t.NameEn)
+                .Select(t => new TagPickerDto
+                {
+                    Id = t.Id,
+                    Name = language == LanguageDbEnum.Arabic ? t.NameAr : t.NameEn,
+                    Color = t.Color
+                })
+                .ToList();
+        }
+
         public async Task<List<TagDto>> ListAdminAsync()
         {
             var tags = await _mmsUnitOfWork.Tags.ListAsync();

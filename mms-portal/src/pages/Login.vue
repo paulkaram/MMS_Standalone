@@ -8,6 +8,7 @@ import { encryptPassword } from '@/helpers/encryption'
 import { setLocale } from '@/plugins/i18n'
 import Icon from '@/components/ui/Icon.vue'
 import misaLogo from '@/assets/misa_logo.svg'
+import misaPattern from '@/assets/misa.svg'
 
 const { t } = useI18n()
 const router = useRouter()
@@ -17,7 +18,7 @@ const isRtl = computed(() => userStore.isRtl)
 const mounted = ref(false)
 
 onMounted(() => {
-  setTimeout(() => { mounted.value = true }, 50)
+  requestAnimationFrame(() => { mounted.value = true })
 })
 
 function toggleLanguage() {
@@ -121,39 +122,34 @@ async function handleLogin() {
 <template>
   <div class="misa-login" :dir="isRtl ? 'rtl' : 'ltr'" :class="{ 'is-mounted': mounted }">
 
-    <!-- ========== FORM HALF ========== -->
-    <section class="half half--form">
-      <!-- subtle geometric accent top-corner -->
-      <svg class="corner-geo" viewBox="0 0 320 320" fill="none" aria-hidden="true">
-        <path d="M0 0H160V160H0z" fill="#006d4b" opacity=".03"/>
-        <path d="M160 0C160 88.37 88.37 160 0 160V0h160z" fill="#63a58f" opacity=".05"/>
-        <path d="M160 0h160v160H160z" fill="#006d4b" opacity=".02"/>
-        <circle cx="240" cy="80" r="40" fill="#63a58f" opacity=".04"/>
-        <path d="M0 160h160v160H0z" fill="#63a58f" opacity=".025"/>
-        <path d="M0 320V160l80 80L0 320z" fill="#006d4b" opacity=".03"/>
-      </svg>
+    <!-- ══════════════════════ FORM PANE (LEFT) ══════════════════════ -->
+    <section class="pane pane--form">
+      <!-- subtle top banding -->
+      <div class="form-topband" aria-hidden="true">
+        <span></span><span></span><span></span>
+      </div>
 
       <div class="form-wrap">
         <!-- Language toggle -->
         <button class="lang-toggle" @click="toggleLanguage" type="button">
-          <span class="lang-toggle__label">{{ isRtl ? 'EN' : 'عربي' }}</span>
+          <Icon icon="mdi:translate" class="w-4 h-4" />
+          <span>{{ isRtl ? 'English' : 'العربية' }}</span>
         </button>
 
         <!-- Logo -->
-        <div class="logo-block">
-          <img :src="misaLogo" alt="MISA" class="logo-img" />
+        <div class="brand">
+          <img :src="misaLogo" alt="MISA" class="brand__logo" />
+          <div class="brand__rule" aria-hidden="true"></div>
         </div>
 
-        <!-- Divider accent -->
-        <div class="accent-rule" aria-hidden="true">
-          <span class="accent-rule__seg accent-rule__seg--short"></span>
-          <span class="accent-rule__seg accent-rule__seg--long"></span>
-          <span class="accent-rule__seg accent-rule__seg--short"></span>
+        <!-- Titles -->
+        <div class="heading">
+          <span class="heading__eyebrow">{{ isRtl ? 'أهلاً بك' : 'Welcome' }}</span>
+          <h1 class="heading__title">{{ $t('ApplicationName') }}</h1>
+          <p class="heading__sub">
+            {{ isRtl ? 'سجّل الدخول للوصول إلى لوحة إدارة الاجتماعات' : 'Sign in to access the meeting management dashboard' }}
+          </p>
         </div>
-
-        <!-- Title -->
-        <h1 class="form-title">{{ $t('ApplicationName') }}</h1>
-        <p class="form-subtitle">{{ $t('Login') }}</p>
 
         <!-- Error banner -->
         <Transition name="err-slide">
@@ -211,280 +207,240 @@ async function handleLogin() {
           <!-- Submit -->
           <button type="submit" class="btn-login" :disabled="isLoading">
             <span v-if="isLoading" class="btn-login__spinner"></span>
-            <span>{{ isLoading ? $t('LoggingIn') : $t('Login') }}</span>
-            <Icon v-if="!isLoading" :icon="isRtl ? 'mdi:arrow-left' : 'mdi:arrow-right'" class="w-5 h-5" />
+            <span class="btn-login__label">{{ isLoading ? $t('LoggingIn') : $t('Login') }}</span>
+            <Icon v-if="!isLoading" :icon="isRtl ? 'mdi:arrow-left' : 'mdi:arrow-right'" class="w-5 h-5 btn-login__arrow" />
           </button>
         </form>
 
         <!-- Footer -->
         <footer class="form-footer">
-          &copy; {{ new Date().getFullYear() }}&ensp;{{ isRtl ? 'وزارة الاستثمار' : 'Ministry of Investment' }}
+          <span>&copy; {{ new Date().getFullYear() }}&ensp;{{ isRtl ? 'وزارة الاستثمار — المملكة العربية السعودية' : 'Ministry of Investment — Kingdom of Saudi Arabia' }}</span>
         </footer>
       </div>
     </section>
 
-    <!-- ========== MOSAIC HALF ========== -->
-    <section class="half half--mosaic">
-      <!-- Layer 1: Full-bleed pattern at strong opacity (the star of the show) -->
-      <svg class="mosaic mosaic--bg" viewBox="0 0 783 320" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
-        <rect width="160" height="152" transform="translate(631 320) rotate(-90)" fill="#e0ede7"/>
-        <path d="M707 160L707 240C748.974 240 783 204.183 783 160L707 160Z" fill="#63a58f"/>
-        <path d="M631 240C631 195.817 665.026 160 707 160L707 240L631 240Z" fill="#005e3f"/>
-        <rect width="160" height="152" transform="translate(479 160) rotate(-90)" fill="#e0ede7"/>
-        <path d="M555 80L555 0L631 80L555 80Z" fill="#63a58f"/>
-        <path d="M479 80L555 80L555 160L479 80Z" fill="#63a58f"/>
-        <rect width="160" height="152" transform="translate(631 160) rotate(-90)" fill="#8fc4b0"/>
-        <path d="M783 80C783 124.183 748.974 160 707 160C665.026 160 631 124.183 631 80L783 80Z" fill="#005e3f"/>
-        <ellipse cx="707" cy="80" rx="40" ry="38" transform="rotate(-90 707 80)" fill="#e0ede7"/>
-        <rect width="160" height="152" transform="translate(479 320) rotate(-90)" fill="#8fc4b0"/>
-        <path d="M479 160L631 160L631 320L479 160Z" fill="#005e3f"/>
-        <ellipse cx="555" cy="240" rx="40" ry="38" transform="rotate(-90 555 240)" fill="#e0ede7"/>
-        <rect width="160" height="152" transform="translate(480 158) rotate(-180)" fill="#8fc4b0"/>
-        <path d="M480 82L400 82C400 40.0264 435.817 6 480 6L480 82Z" fill="#e0ede7"/>
-        <path d="M400 158C355.817 158 320 123.974 320 82L400 82L400 158Z" fill="#005e3f"/>
-        <rect width="160" height="152" transform="translate(320 158) rotate(-180)" fill="#e0ede7"/>
-        <path d="M160 5.99999C204.183 6 240 40.0264 240 82C240 123.974 204.183 158 160 158L160 5.99999Z" fill="#005e3f"/>
-        <ellipse cx="280" cy="82" rx="40" ry="38" transform="rotate(-180 280 82)" fill="#8fc4b0"/>
-        <rect width="160" height="152" transform="translate(160 158) rotate(-180)" fill="#8fc4b0"/>
-        <path d="M160 6C115.817 6 80 40.0263 80 82C80 123.974 115.817 158 160 158L160 6Z" fill="#005e3f"/>
-        <path d="M0 158L0 6L80 82L0 158Z" fill="#e0ede7"/>
-        <rect width="160" height="152" transform="translate(479 311) rotate(-180)" fill="#e0ede7"/>
-        <path d="M319 235L399 235C399 193.026 363.183 159 319 159L319 235Z" fill="#63a58f"/>
-        <path d="M399 311C354.817 311 319 276.974 319 235L399 235L399 311Z" fill="#005e3f"/>
-        <rect width="160" height="152" transform="translate(319 311) rotate(-180)" fill="#8fc4b0"/>
-        <path d="M239 159C283.183 159 319 193.026 319 235C319 276.974 283.183 311 239 311L239 159Z" fill="#005e3f"/>
-        <ellipse cx="239" cy="235" rx="40" ry="38" transform="rotate(-180 239 235)" fill="#e0ede7"/>
-      </svg>
+    <!-- ══════════════════════ PATTERN PANE (RIGHT) ══════════════════════ -->
+    <section class="pane pane--mosaic">
+      <!-- HERO pattern, full vivid opacity, bleeds off edges -->
+      <img :src="misaPattern" alt="" class="mosaic-hero" aria-hidden="true" />
+      <img :src="misaPattern" alt="" class="mosaic-hero mosaic-hero--2" aria-hidden="true" />
 
-      <!-- Layer 2: Second copy, offset + rotated for richer coverage -->
-      <svg class="mosaic mosaic--layer2" viewBox="0 0 783 320" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
-        <rect width="160" height="152" transform="translate(631 320) rotate(-90)" fill="#d5e8df"/>
-        <path d="M707 160L707 240C748.974 240 783 204.183 783 160L707 160Z" fill="#4f9a80"/>
-        <path d="M631 240C631 195.817 665.026 160 707 160L707 240L631 240Z" fill="#006d4b"/>
-        <rect width="160" height="152" transform="translate(479 160) rotate(-90)" fill="#d5e8df"/>
-        <path d="M555 80L555 0L631 80L555 80Z" fill="#4f9a80"/>
-        <path d="M479 80L555 80L555 160L479 80Z" fill="#4f9a80"/>
-        <rect width="160" height="152" transform="translate(631 160) rotate(-90)" fill="#82b9a4"/>
-        <path d="M783 80C783 124.183 748.974 160 707 160C665.026 160 631 124.183 631 80L783 80Z" fill="#006d4b"/>
-        <ellipse cx="707" cy="80" rx="40" ry="38" transform="rotate(-90 707 80)" fill="#d5e8df"/>
-        <rect width="160" height="152" transform="translate(479 320) rotate(-90)" fill="#82b9a4"/>
-        <path d="M479 160L631 160L631 320L479 160Z" fill="#006d4b"/>
-        <ellipse cx="555" cy="240" rx="40" ry="38" transform="rotate(-90 555 240)" fill="#d5e8df"/>
-        <rect width="160" height="152" transform="translate(480 158) rotate(-180)" fill="#82b9a4"/>
-        <path d="M480 82L400 82C400 40.0264 435.817 6 480 6L480 82Z" fill="#d5e8df"/>
-        <path d="M400 158C355.817 158 320 123.974 320 82L400 82L400 158Z" fill="#006d4b"/>
-        <rect width="160" height="152" transform="translate(320 158) rotate(-180)" fill="#d5e8df"/>
-        <path d="M160 6C204.183 6 240 40.0264 240 82C240 123.974 204.183 158 160 158L160 6Z" fill="#006d4b"/>
-        <ellipse cx="280" cy="82" rx="40" ry="38" transform="rotate(-180 280 82)" fill="#82b9a4"/>
-        <rect width="160" height="152" transform="translate(160 158) rotate(-180)" fill="#82b9a4"/>
-        <path d="M160 6C115.817 6 80 40.0263 80 82C80 123.974 115.817 158 160 158L160 6Z" fill="#006d4b"/>
-        <path d="M0 158L0 6L80 82L0 158Z" fill="#d5e8df"/>
-      </svg>
-
-      <!-- Scrim for text readability -->
-      <div class="mosaic-scrim"></div>
-
-      <!-- Center text overlay -->
-      <div class="mosaic-content">
-        <div class="mosaic-badge">
-          <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M16 3L3 10l13 7 13-7-13-7z"/>
-            <path d="M3 22l13 7 13-7"/>
-            <path d="M3 16l13 7 13-7"/>
-          </svg>
+      <!-- A single dark green plaque anchored to the bottom — holds the branding -->
+      <div class="plaque">
+        <div class="plaque__accent" aria-hidden="true">
+          <span></span><span></span><span></span>
         </div>
-        <h2 class="mosaic-title">
+
+        <p class="plaque__eyebrow">{{ isRtl ? 'المملكة العربية السعودية' : 'Kingdom of Saudi Arabia' }}</p>
+        <h2 class="plaque__title">
           {{ isRtl ? 'نظام إدارة الاجتماعات' : 'Meeting Management' }}
-          <span>{{ isRtl ? '' : 'System' }}</span>
+          <span v-if="!isRtl">System</span>
         </h2>
-        <div class="mosaic-rule"></div>
-        <p class="mosaic-ministry">{{ isRtl ? 'وزارة الاستثمار' : 'Ministry of Investment' }}</p>
+        <p class="plaque__ministry">{{ isRtl ? 'وزارة الاستثمار' : 'Ministry of Investment' }}</p>
+
+        <div class="plaque__stats">
+          <div class="plaque__stat">
+            <Icon icon="mdi:shield-check-outline" class="w-5 h-5" />
+            <span>{{ isRtl ? 'بيئة آمنة' : 'Secure Environment' }}</span>
+          </div>
+          <div class="plaque__stat">
+            <Icon icon="mdi:check-decagram-outline" class="w-5 h-5" />
+            <span>{{ isRtl ? 'معتمد حكومياً' : 'Government Certified' }}</span>
+          </div>
+        </div>
       </div>
     </section>
   </div>
 </template>
 
 <style scoped>
-/* ================================================================
-   MISA LOGIN — "Institutional Mosaic"
-   ================================================================ */
+/* ╔══════════════════════════════════════════════════════════════════╗
+   ║  MISA LOGIN — Mosaic Hero                                        ║
+   ║  The geometric tile pattern is the hero. Everything else serves  ║
+   ║  as a quiet frame for it.                                        ║
+   ╚══════════════════════════════════════════════════════════════════╝ */
 
-/* --- Variables --- */
 .misa-login {
   --misa-primary: #006d4b;
-  --misa-primary-dark: #005339;
+  --misa-primary-dark: #004f37;
+  --misa-primary-darker: #003524;
   --misa-secondary: #63a58f;
+  --misa-secondary-light: #8fc4b0;
   --misa-cream: #f4f8f6;
-  --misa-sage: #e4ede8;
-  --misa-text: #1c3028;
+  --misa-sage: #e6f1ed;
+  --misa-sage-deep: #d5e8df;
+  --misa-text: #0f2920;
   --misa-text-muted: #6b8a7d;
-  --misa-border: #d0ddd6;
-  --misa-error: #c0392b;
+  --misa-border: #d5e0db;
+  --misa-error: #b83227;
 
   display: flex;
   min-height: 100vh;
   font-family: 'Tajawal', sans-serif;
   background: #fff;
+  color: var(--misa-text);
+  position: relative;
+  overflow: hidden;
 }
 
-/* --- Reveal orchestration --- */
-.half--form .form-wrap { opacity: 0; transform: translateY(18px); transition: opacity .55s ease, transform .55s ease; }
-.half--mosaic .mosaic-content { opacity: 0; transform: translateY(24px); transition: opacity .6s ease .25s, transform .6s ease .25s; }
-.half--mosaic .mosaic--bg { opacity: 0; transition: opacity .8s ease .1s; }
-.half--mosaic .mosaic--layer2 { opacity: 0; transition: opacity .9s ease .3s; }
+/* ────────────────── PANES ────────────────── */
+.pane { min-height: 100vh; position: relative; }
 
-.is-mounted .half--form .form-wrap { opacity: 1; transform: translateY(0); }
-.is-mounted .half--mosaic .mosaic-content { opacity: 1; transform: translateY(0); }
-.is-mounted .half--mosaic .mosaic--bg { opacity: .65; }
-.is-mounted .half--mosaic .mosaic--layer2 { opacity: .35; }
-
-/* ================================================================
-   LAYOUT HALVES
-   ================================================================ */
-.half { min-height: 100vh; }
-.half--form {
-  flex: 0 0 46%;
+.pane--form {
+  flex: 0 0 44%;
   display: flex;
   align-items: center;
   justify-content: center;
-  position: relative;
-  z-index: 2;
   background: #fff;
+  z-index: 2;
   overflow: hidden;
 }
-.half--mosaic {
+
+.pane--mosaic {
   flex: 1;
   position: relative;
   overflow: hidden;
-  background: var(--misa-primary);
+  /* Cream background — pattern's cream tiles blend, green tiles pop */
+  background:
+    radial-gradient(ellipse at top right, #f0f8f4 0%, #e0ede7 100%);
 }
 
-/* ================================================================
-   CORNER GEOMETRY on the form side (subtle)
-   ================================================================ */
-.corner-geo {
+/* ────────────────── FORM TOP BAND ──────────────────
+   Three thin bars of decreasing green depth at the very top of the
+   form panel — a quiet echo of the mosaic. */
+.form-topband {
   position: absolute;
-  inset-inline-end: 0;
-  top: 0;
-  width: 320px;
-  height: 320px;
-  pointer-events: none;
+  top: 0; left: 0; right: 0;
+  display: flex;
+  height: 4px;
+  z-index: 1;
 }
+.form-topband span { flex: 1; }
+.form-topband span:nth-child(1) { background: var(--misa-primary); flex: 0 0 30%; }
+.form-topband span:nth-child(2) { background: var(--misa-secondary); flex: 0 0 15%; }
+.form-topband span:nth-child(3) { background: var(--misa-sage); }
 
-/* ================================================================
-   FORM PANEL
-   ================================================================ */
+/* ────────────────── FORM WRAP ────────────────── */
 .form-wrap {
   width: 100%;
-  max-width: 370px;
-  padding: 2rem;
+  max-width: 400px;
+  padding: 3rem 2rem;
   position: relative;
 }
 
 /* --- Language toggle --- */
 .lang-toggle {
   position: absolute;
-  top: 0;
-  inset-inline-end: 0;
+  top: 1.25rem;
+  inset-inline-end: 1.25rem;
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  padding: 6px 14px;
-  border: 1.5px solid var(--misa-border);
-  border-radius: 8px;
-  background: var(--misa-cream);
+  gap: 6px;
+  padding: 7px 14px;
+  border: 1px solid var(--misa-border);
+  border-radius: 999px;
+  background: #fff;
   color: var(--misa-primary);
-  font-size: 13px;
-  font-weight: 700;
+  font-size: 12.5px;
+  font-weight: 600;
   cursor: pointer;
   font-family: inherit;
-  transition: all .2s;
+  transition: all .22s ease;
+  letter-spacing: .2px;
 }
 .lang-toggle:hover {
   background: var(--misa-sage);
   border-color: var(--misa-secondary);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(0,109,75,.10);
 }
 
-/* --- Logo --- */
-.logo-block {
-  margin: 0 0 2rem;
-  text-align: center;
-}
-.logo-img {
-  height: 62px;
-  margin: 0 auto;
-  display: block;
-  object-fit: contain;
-}
-
-/* --- Accent rule --- */
-.accent-rule {
+/* ────────────────── BRAND BLOCK ────────────────── */
+.brand {
+  margin-bottom: 2rem;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 5px;
-  margin-bottom: 1.75rem;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 14px;
 }
-.accent-rule__seg {
+[dir="rtl"] .brand { align-items: flex-end; }
+
+.brand__logo {
+  height: 58px;
+  object-fit: contain;
+  display: block;
+}
+
+.brand__rule {
+  width: 64px;
   height: 3px;
+  background: linear-gradient(90deg, var(--misa-primary) 0%, var(--misa-secondary) 100%);
   border-radius: 2px;
 }
-.accent-rule__seg--short {
-  width: 10px;
-  background: var(--misa-secondary);
-  opacity: .45;
+
+/* ────────────────── HEADING ────────────────── */
+.heading { margin-bottom: 1.75rem; }
+[dir="rtl"] .heading { text-align: right; }
+
+.heading__eyebrow {
+  display: inline-block;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--misa-secondary);
+  margin-bottom: 8px;
 }
-.accent-rule__seg--long {
-  width: 36px;
-  background: var(--misa-primary);
+[dir="rtl"] .heading__eyebrow { letter-spacing: 0; }
+
+.heading__title {
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--misa-text);
+  margin: 0 0 6px;
+  line-height: 1.25;
+  letter-spacing: -.3px;
 }
 
-/* --- Title --- */
-.form-title {
-  text-align: center;
-  font-size: 20px;
-  font-weight: 700;
-  color: var(--misa-text);
-  margin: 0 0 4px;
-  line-height: 1.4;
-}
-.form-subtitle {
-  text-align: center;
+.heading__sub {
   font-size: 14px;
   color: var(--misa-text-muted);
-  font-weight: 500;
-  margin: 0 0 1.75rem;
+  margin: 0;
+  line-height: 1.55;
+  max-width: 340px;
 }
 
-/* --- Error banner --- */
+/* ────────────────── ERROR BANNER ────────────────── */
 .err-banner {
   display: flex;
   align-items: flex-start;
-  gap: 8px;
-  padding: 10px 14px;
+  gap: 9px;
+  padding: 11px 14px;
   margin-bottom: 1.25rem;
-  background: #fdf2f2;
+  background: #fdeeeb;
   border-inline-start: 3px solid var(--misa-error);
   border-radius: 0 8px 8px 0;
   color: var(--misa-error);
   font-size: 13px;
   line-height: 1.5;
 }
+[dir="rtl"] .err-banner { border-radius: 8px 0 0 8px; }
 
 .err-slide-enter-active,
 .err-slide-leave-active { transition: all .25s cubic-bezier(.4,0,.2,1); }
 .err-slide-enter-from,
 .err-slide-leave-to { opacity: 0; transform: translateY(-6px); }
 
-/* --- Form fields --- */
-.login-form { display: flex; flex-direction: column; gap: 1.125rem; }
+/* ────────────────── FORM FIELDS ────────────────── */
+.login-form { display: flex; flex-direction: column; gap: 1rem; }
 
 .fld__label {
   display: block;
-  font-size: 13px;
+  font-size: 12.5px;
   font-weight: 600;
   color: var(--misa-text);
-  margin-bottom: 6px;
+  margin-bottom: 7px;
+  letter-spacing: .2px;
 }
 
 .fld__box {
@@ -492,8 +448,8 @@ async function handleLogin() {
   align-items: center;
   border: 1.5px solid var(--misa-border);
   border-radius: 10px;
-  background: var(--misa-cream);
-  transition: border-color .2s, box-shadow .2s, background .2s;
+  background: #fafcfb;
+  transition: border-color .2s, box-shadow .22s, background .2s;
 }
 .fld__box:hover {
   border-color: var(--misa-secondary);
@@ -502,14 +458,10 @@ async function handleLogin() {
 .fld__box:focus-within {
   border-color: var(--misa-primary);
   background: #fff;
-  box-shadow: 0 0 0 3px rgba(0,109,75,.1);
+  box-shadow: 0 0 0 4px rgba(0,109,75,.10);
 }
-.fld__box--err {
-  border-color: var(--misa-error) !important;
-}
-.fld__box--err:focus-within {
-  box-shadow: 0 0 0 3px rgba(192,57,43,.1);
-}
+.fld__box--err { border-color: var(--misa-error) !important; }
+.fld__box--err:focus-within { box-shadow: 0 0 0 4px rgba(184,50,39,.10); }
 
 .fld__ico {
   display: flex;
@@ -518,7 +470,7 @@ async function handleLogin() {
   width: 46px;
   flex-shrink: 0;
   color: var(--misa-text-muted);
-  opacity: .6;
+  opacity: .55;
   transition: color .2s, opacity .2s;
 }
 .fld__box:focus-within .fld__ico {
@@ -530,18 +482,18 @@ async function handleLogin() {
   flex: 1;
   border: none;
   background: transparent;
-  padding: 12px 12px 12px 0;
+  padding: 13px 12px 13px 0;
   font-size: 14px;
   color: var(--misa-text);
   font-family: inherit;
   outline: none;
   min-width: 0;
 }
-[dir="rtl"] .fld__input { padding: 12px 0 12px 12px; }
+[dir="rtl"] .fld__input { padding: 13px 0 13px 12px; }
 .fld__input::placeholder { color: #a5b8ae; }
 
 .fld__eye {
-  width: 40px;
+  width: 42px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -559,20 +511,20 @@ async function handleLogin() {
   display: block;
   font-size: 11.5px;
   color: var(--misa-error);
-  margin-top: 4px;
+  margin-top: 5px;
   padding-inline-start: 2px;
 }
 
-/* --- Submit button --- */
+/* ────────────────── SUBMIT BUTTON ────────────────── */
 .btn-login {
   width: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  padding: 13px 28px;
-  margin-top: .375rem;
-  background: var(--misa-primary);
+  gap: 10px;
+  padding: 14px 28px;
+  margin-top: .5rem;
+  background: linear-gradient(135deg, var(--misa-primary) 0%, var(--misa-primary-dark) 100%);
   color: #fff;
   border: none;
   border-radius: 10px;
@@ -581,169 +533,259 @@ async function handleLogin() {
   font-family: inherit;
   cursor: pointer;
   position: relative;
-  transition: background .2s, box-shadow .25s, transform .15s;
+  transition: transform .18s ease, box-shadow .25s ease, filter .2s;
   letter-spacing: .3px;
+  box-shadow: 0 6px 20px rgba(0,109,75,.25);
+  overflow: hidden;
 }
+.btn-login::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,.15) 50%, transparent 100%);
+  transform: translateX(-100%);
+  transition: transform .55s ease;
+}
+.btn-login:hover:not(:disabled)::before { transform: translateX(100%); }
 .btn-login:hover:not(:disabled) {
-  background: var(--misa-primary-dark);
-  box-shadow: 0 8px 28px rgba(0,109,75,.28);
-  transform: translateY(-1px);
+  transform: translateY(-1.5px);
+  box-shadow: 0 10px 28px rgba(0,109,75,.32);
 }
-.btn-login:active:not(:disabled) { transform: translateY(0); box-shadow: none; }
-.btn-login:disabled { opacity: .55; cursor: not-allowed; }
+.btn-login:active:not(:disabled) { transform: translateY(0); }
+.btn-login:disabled { opacity: .6; cursor: not-allowed; }
+
+.btn-login__arrow { transition: transform .2s ease; }
+.btn-login:hover:not(:disabled) .btn-login__arrow { transform: translateX(3px); }
+[dir="rtl"] .btn-login:hover:not(:disabled) .btn-login__arrow { transform: translateX(-3px); }
 
 .btn-login__spinner {
   width: 18px;
   height: 18px;
-  border: 2.5px solid rgba(255,255,255,.25);
+  border: 2.5px solid rgba(255,255,255,.28);
   border-top-color: #fff;
   border-radius: 50%;
   animation: spin .65s linear infinite;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 
-/* --- Footer --- */
+/* ────────────────── FOOTER ────────────────── */
 .form-footer {
-  text-align: center;
-  margin-top: 2rem;
-  padding-top: 1rem;
+  margin-top: 2.25rem;
+  padding-top: 1.25rem;
   border-top: 1px solid var(--misa-sage);
-  font-size: 12px;
+  font-size: 11.5px;
   color: var(--misa-text-muted);
+  letter-spacing: .3px;
+  text-align: center;
+}
+
+/* ╔══════════════════════════════════════════════════════════════════╗
+   ║  MOSAIC PANE — pattern is the hero                               ║
+   ╚══════════════════════════════════════════════════════════════════╝ */
+
+.mosaic-hero {
+  position: absolute;
+  pointer-events: none;
+  user-select: none;
+  /* Full vivid opacity — this is the star */
+  opacity: 1;
+}
+
+/* Primary tile — big, positioned to the upper area, bleeds right */
+.mosaic-hero:not(.mosaic-hero--2) {
+  top: -8%;
+  inset-inline-start: -5%;
+  width: 115%;
+  height: auto;
+  filter: drop-shadow(0 20px 40px rgba(0,113,77,.12));
+}
+
+/* Second tile — flipped, anchored lower, slight transparency so the
+   overlap feels intentional rather than noisy */
+.mosaic-hero--2 {
+  bottom: -10%;
+  inset-inline-end: -15%;
+  width: 100%;
+  height: auto;
+  transform: scaleX(-1) scaleY(-1);
+  opacity: .72;
+  mix-blend-mode: multiply;
+}
+[dir="rtl"] .mosaic-hero--2 { transform: scaleX(1) scaleY(-1); }
+
+/* ────────────────── PLAQUE (branding card) ──────────────────
+   A dark green floating panel anchored to the bottom. It sits ON TOP
+   of the pattern so the pattern wraps around it like a frame. */
+.plaque {
+  position: absolute;
+  bottom: 2.5rem;
+  inset-inline-start: 2.5rem;
+  inset-inline-end: 2.5rem;
+  max-width: 520px;
+  margin-inline: auto;
+  background: linear-gradient(135deg, rgba(0,83,57,.96) 0%, rgba(0,53,36,.98) 100%);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 18px;
+  padding: 2rem 2.25rem;
+  color: #fff;
+  box-shadow:
+    0 30px 60px -20px rgba(0,53,36,.4),
+    0 0 0 1px rgba(255,255,255,.04) inset;
+  z-index: 3;
+}
+
+.plaque__accent {
+  display: flex;
+  gap: 5px;
+  margin-bottom: 1.125rem;
+}
+.plaque__accent span {
+  height: 3px;
+  border-radius: 2px;
+}
+.plaque__accent span:nth-child(1) { width: 28px; background: var(--misa-secondary-light); }
+.plaque__accent span:nth-child(2) { width: 14px; background: var(--misa-secondary); opacity: .7; }
+.plaque__accent span:nth-child(3) { width: 6px;  background: rgba(255,255,255,.4); }
+
+.plaque__eyebrow {
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: rgba(143,196,176,.85);
+  margin: 0 0 .5rem;
+}
+[dir="rtl"] .plaque__eyebrow { letter-spacing: 0; }
+
+.plaque__title {
+  font-size: 28px;
+  font-weight: 800;
+  color: #fff;
+  margin: 0 0 .375rem;
+  line-height: 1.25;
+  letter-spacing: -.4px;
+}
+.plaque__title span { display: inline-block; }
+
+.plaque__ministry {
+  font-size: 15px;
+  color: rgba(255,255,255,.65);
+  margin: 0 0 1.5rem;
+  font-weight: 500;
   letter-spacing: .2px;
 }
 
-/* ================================================================
-   MOSAIC PANEL (right)
-   ================================================================ */
-
-/* Large vivid pattern — the hero element */
-.mosaic {
-  position: absolute;
-  pointer-events: none;
-}
-
-.mosaic--bg {
-  inset: -15%;
-  width: 130%;
-  height: 130%;
-}
-
-.mosaic--layer2 {
-  inset: 5% -20% -10% 10%;
-  width: 130%;
-  height: 120%;
-  transform: rotate(180deg);
-}
-
-/* Dark vignette for text readability */
-.mosaic-scrim {
-  position: absolute;
-  inset: 0;
-  background:
-    radial-gradient(ellipse at 50% 50%, rgba(0,53,35,.55) 0%, transparent 75%),
-    linear-gradient(180deg, rgba(0,83,57,.15) 0%, rgba(0,53,35,.4) 100%);
-  pointer-events: none;
-}
-
-/* --- Center branding overlay --- */
-.mosaic-content {
-  position: relative;
-  z-index: 3;
+.plaque__stats {
   display: flex;
-  flex-direction: column;
+  gap: 1.75rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid rgba(255,255,255,.1);
+  flex-wrap: wrap;
+}
+
+.plaque__stat {
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
-  height: 100%;
-  padding: 3rem;
-  text-align: center;
-}
-
-.mosaic-badge {
-  width: 60px;
-  height: 60px;
-  border-radius: 16px;
-  background: rgba(255,255,255,.12);
-  border: 1px solid rgba(255,255,255,.18);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 1.5rem;
-  backdrop-filter: blur(6px);
-}
-.mosaic-badge svg {
-  width: 28px;
-  height: 28px;
-  color: rgba(255,255,255,.9);
-}
-
-.mosaic-title {
-  font-size: 32px;
-  font-weight: 800;
-  color: #fff;
-  line-height: 1.35;
-  margin: 0 0 1rem;
-  max-width: 300px;
-  text-shadow: 0 2px 16px rgba(0,0,0,.2);
-}
-.mosaic-title span {
-  display: block;
-}
-
-.mosaic-rule {
-  width: 48px;
-  height: 3px;
-  border-radius: 2px;
-  background: rgba(255,255,255,.35);
-  margin: 0 auto 1rem;
-}
-
-.mosaic-ministry {
-  font-size: 15px;
-  color: rgba(255,255,255,.6);
+  gap: 8px;
+  font-size: 12.5px;
   font-weight: 500;
-  margin: 0;
-  letter-spacing: .4px;
+  color: rgba(255,255,255,.78);
+}
+.plaque__stat :deep(svg),
+.plaque__stat :deep(.material-symbols-outlined) {
+  color: var(--misa-secondary-light);
+  flex-shrink: 0;
 }
 
-/* ================================================================
-   RESPONSIVE
-   ================================================================ */
+/* ╔══════════════════════════════════════════════════════════════════╗
+   ║  REVEAL ORCHESTRATION                                            ║
+   ╚══════════════════════════════════════════════════════════════════╝ */
+.form-wrap > * { opacity: 0; transform: translateY(14px); transition: opacity .55s ease, transform .55s ease; }
+.is-mounted .form-wrap > * { opacity: 1; transform: translateY(0); }
+.is-mounted .form-wrap > .lang-toggle { transition-delay: .05s; }
+.is-mounted .form-wrap > .brand        { transition-delay: .08s; }
+.is-mounted .form-wrap > .heading      { transition-delay: .16s; }
+.is-mounted .form-wrap > .login-form   { transition-delay: .24s; }
+.is-mounted .form-wrap > .form-footer  { transition-delay: .32s; }
+
+.mosaic-hero { opacity: 0 !important; transition: opacity .9s ease .1s, transform 1.1s cubic-bezier(.2,.8,.2,1) .1s; transform: scale(1.05); }
+.mosaic-hero--2 { transition-delay: .25s; }
+.is-mounted .mosaic-hero { opacity: 1 !important; transform: scale(1); }
+.is-mounted .mosaic-hero--2 { opacity: .72 !important; }
+
+.plaque { opacity: 0; transform: translateY(28px); transition: opacity .6s ease .45s, transform .6s ease .45s; }
+.is-mounted .plaque { opacity: 1; transform: translateY(0); }
+
+/* ╔══════════════════════════════════════════════════════════════════╗
+   ║  RESPONSIVE                                                      ║
+   ╚══════════════════════════════════════════════════════════════════╝ */
+@media (max-width: 1100px) {
+  .pane--form { flex: 0 0 48%; }
+  .plaque { inset-inline-start: 1.75rem; inset-inline-end: 1.75rem; padding: 1.5rem 1.75rem; }
+  .plaque__title { font-size: 24px; }
+}
+
 @media (max-width: 960px) {
   .misa-login { flex-direction: column-reverse; }
-  .half { min-height: auto; }
+  .pane { min-height: auto; }
 
-  .half--mosaic {
-    height: 240px;
+  .pane--mosaic {
+    height: 320px;
     flex: none;
   }
-  .half--form {
-    flex: 1;
-    padding: 0;
+  .pane--form { flex: 1; padding: 0; }
+
+  .mosaic-hero:not(.mosaic-hero--2) {
+    top: -15%;
+    inset-inline-start: -10%;
+    width: 130%;
   }
+  .mosaic-hero--2 { display: none; }
 
-  .mosaic-title { font-size: 22px; }
-  .mosaic-badge { width: 44px; height: 44px; border-radius: 12px; margin-bottom: 1rem; }
-  .mosaic-badge svg { width: 22px; height: 22px; }
-  .mosaic-ministry { font-size: 13px; }
-  .mosaic-rule { margin-bottom: .75rem; }
+  .plaque {
+    bottom: 1rem;
+    inset-inline-start: 1rem;
+    inset-inline-end: 1rem;
+    padding: 1.125rem 1.25rem;
+    border-radius: 14px;
+  }
+  .plaque__eyebrow { font-size: 10.5px; margin-bottom: .25rem; }
+  .plaque__title { font-size: 18px; margin-bottom: .2rem; }
+  .plaque__ministry { font-size: 13px; margin-bottom: .75rem; }
+  .plaque__stats { gap: 1rem; padding-top: .625rem; }
+  .plaque__stat { font-size: 11px; }
+  .plaque__accent { margin-bottom: .5rem; }
 
-  .form-wrap { max-width: 420px; padding: 2rem 1.5rem; }
-  .logo-img { height: 52px; }
+  .form-wrap { max-width: 440px; padding: 2.5rem 1.5rem 2rem; }
+  .brand__logo { height: 50px; }
+  .heading__title { font-size: 22px; }
 
-  .lang-toggle { position: fixed; top: 16px; inset-inline-end: 16px; z-index: 50;
-    background: rgba(255,255,255,.85); backdrop-filter: blur(8px);
-    border-color: rgba(255,255,255,.4); }
-
-  .corner-geo { display: none; }
+  .lang-toggle { top: 1rem; inset-inline-end: 1rem; }
 }
 
 @media (max-width: 480px) {
-  .half--mosaic { height: 200px; }
-  .mosaic-title { font-size: 18px; }
-  .form-wrap { padding: 1.5rem 1.25rem; }
-  .logo-img { height: 46px; }
-  .form-title { font-size: 18px; }
-  .form-subtitle { font-size: 13px; }
+  .pane--mosaic { height: 260px; }
+  .plaque__title { font-size: 16px; }
+  .plaque__stat span { display: none; }
+  .plaque__stats { justify-content: center; }
+  .form-wrap { padding: 2rem 1.25rem 1.5rem; }
+  .brand__logo { height: 44px; }
+  .heading__title { font-size: 20px; }
+  .heading__sub { font-size: 13px; }
+}
+
+/* Reduce motion */
+@media (prefers-reduced-motion: reduce) {
+  .form-wrap > *,
+  .mosaic-hero,
+  .plaque,
+  .btn-login,
+  .btn-login::before,
+  .btn-login__arrow {
+    transition: none !important;
+    animation: none !important;
+  }
 }
 </style>

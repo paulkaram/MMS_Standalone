@@ -20,6 +20,12 @@ export interface TagListItem {
   name: string
 }
 
+export interface TagPickerItem {
+  id: number
+  name: string
+  color: string
+}
+
 export interface TagLinkPost {
   entityTypeId: number
   entityId: number
@@ -36,6 +42,11 @@ export enum TagEntityType {
 const TagsService = {
   list(): Promise<TagListItem[]> {
     return axios.get('tags')
+  },
+
+  /** Picker-friendly list — id + localized name + color, no permission gate. */
+  listForPicker(): Promise<TagPickerItem[]> {
+    return axios.get('tags/picker')
   },
 
   listAdmin(): Promise<Tag[]> {

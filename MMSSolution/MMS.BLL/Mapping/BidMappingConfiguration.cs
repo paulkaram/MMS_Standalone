@@ -83,6 +83,29 @@ namespace MMS.BLL.Mapping
                 .Map(dest => dest.NameAr, src => src.NameAr)
                 .Map(dest => dest.NameEn, src => src.NameEn)
                 .Map(dest => dest.StepOrder, src => src.StepOrder);
+
+            config.NewConfig<(BidItemVision vision, LanguageDbEnum Language), BidItemVisionDto>()
+                .Map(dest => dest.Id, src => src.vision.Id)
+                .Map(dest => dest.BidId, src => src.vision.BidId)
+                .Map(dest => dest.BidItemId, src => src.vision.BidItemId)
+                .Map(dest => dest.BidItemTitle, src => src.vision.BidItem != null
+                    ? src.vision.BidItem.ReferenceNumber
+                    : null)
+                .Map(dest => dest.StakeholderUserId, src => src.vision.StakeholderUserId)
+                .Map(dest => dest.ExternalMemberId, src => src.vision.ExternalMemberId)
+                .Map(dest => dest.StakeholderName, src => src.vision.StakeholderUser != null
+                    ? (src.Language == LanguageDbEnum.Arabic ? src.vision.StakeholderUser.FullnameAr : src.vision.StakeholderUser.FullnameEn)
+                    : src.vision.ExternalMember != null
+                        ? (src.Language == LanguageDbEnum.Arabic ? src.vision.ExternalMember.FullnameAr : src.vision.ExternalMember.FullnameEn)
+                        : string.Empty)
+                .Map(dest => dest.IsExternal, src => src.vision.ExternalMemberId != null)
+                .Map(dest => dest.Comment, src => src.vision.Comment)
+                .Map(dest => dest.StatusId, src => src.vision.StatusId)
+                .Map(dest => dest.StatusName, src => src.vision.StatusId == (int)VisionStatusDbEnum.Submitted
+                    ? (src.Language == LanguageDbEnum.Arabic ? "مُرسَل" : "Submitted")
+                    : (src.Language == LanguageDbEnum.Arabic ? "مسودة" : "Draft"))
+                .Map(dest => dest.SubmittedDate, src => src.vision.SubmittedDate)
+                .Map(dest => dest.CreatedDate, src => src.vision.CreatedDate);
         }
     }
 }

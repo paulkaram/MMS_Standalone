@@ -52,11 +52,38 @@
           </Transition>
         </div>
 
-        <!-- Unified Notification Center (IAM) -->
-        <IntalioNotificationBell
-          :token="mmsToken"
-          :language="currentLanguage"
-        />
+        <!-- Notifications -->
+        <div class="hdr-dropdown-container" ref="notifContainer">
+          <button
+            type="button"
+            class="hdr-ctrl-btn hdr-ctrl-btn--notif"
+            :class="{ 'hdr-ctrl-btn--active': notifDropdownOpen }"
+            @click.stop="toggleNotifications"
+          >
+            <Icon icon="mdi:bell-outline" class="w-[18px] h-[18px]" />
+            <span v-if="unreadCount > 0" class="hdr-notif-chip">{{ unreadCount > 99 ? '99+' : unreadCount }}</span>
+          </button>
+          <Transition name="hdr-dd">
+            <div v-if="notifDropdownOpen" class="hdr-dropdown hdr-dropdown--notif">
+              <div class="hdr-notif-header">
+                <span>{{ $t('Notifications') }}</span>
+                <span v-if="unreadCount > 0" class="hdr-notif-header-count">{{ unreadCount }}</span>
+              </div>
+              <div class="hdr-notif-list">
+                <div v-if="notifLoading" class="hdr-notif-empty">{{ $t('Loading') }}</div>
+                <div v-else-if="notifSummary.length === 0" class="hdr-notif-empty">{{ $t('NoNotifications') }}</div>
+                <div
+                  v-for="n in notifSummary"
+                  :key="n.typeId"
+                  class="hdr-notif-item hdr-notif-item--unread"
+                >
+                  <div class="hdr-notif-item-title">{{ n.typeName }}</div>
+                  <div class="hdr-notif-item-body">{{ n.count }}</div>
+                </div>
+              </div>
+            </div>
+          </Transition>
+        </div>
 
         <div class="hdr-divider"></div>
 
@@ -136,10 +163,10 @@
 import { computed, ref, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
 import Icon from '@/components/ui/Icon.vue'
-import IntalioNotificationBell from '@/components/IntalioNotificationBell.vue'
 import { useUserStore } from '@/stores/user'
 import { useAppStore } from '@/stores/app'
 import AuthService from '@/services/AuthService'
+import UsersService from '@/services/UsersService'
 
 // Stores
 const router = useRouter()
@@ -150,8 +177,34 @@ const appStore = useAppStore()
 const profileImageError = ref(false)
 const langDropdownOpen = ref(false)
 const profileDropdownOpen = ref(false)
+const notifDropdownOpen = ref(false)
 const langContainer = ref<HTMLElement | null>(null)
 const profileContainer = ref<HTMLElement | null>(null)
+const notifContainer = ref<HTMLElement | null>(null)
+
+// Notifications (local, from MMS backend — NOT IAM)
+interface NotifSummary { typeId: number; typeName: string; count: number }
+const notifSummary = ref<NotifSummary[]>([])
+const notifLoading = ref(false)
+const unreadCount = computed(() => notifSummary.value.reduce((s, n) => s + (n.count || 0), 0))
+
+async function loadNotifications() {
+  notifLoading.value = true
+  try {
+    const res: any = await UsersService.getNotifications(1, 100)
+    const data = res?.data ?? res?.items ?? res ?? []
+    notifSummary.value = (Array.isArray(data) ? data : []) as NotifSummary[]
+  } catch {
+    notifSummary.value = []
+  } finally {
+    notifLoading.value = false
+  }
+}
+
+function toggleNotifications() {
+  notifDropdownOpen.value = !notifDropdownOpen.value
+  if (notifDropdownOpen.value) loadNotifications()
+}
 
 // Language options
 const languages = [
@@ -167,6 +220,9 @@ function handleClickOutside(e: MouseEvent) {
   if (profileDropdownOpen.value && profileContainer.value && !profileContainer.value.contains(e.target as Node)) {
     profileDropdownOpen.value = false
   }
+  if (notifDropdownOpen.value && notifContainer.value && !notifContainer.value.contains(e.target as Node)) {
+    notifDropdownOpen.value = false
+  }
 }
 
 onMounted(() => document.addEventListener('click', handleClickOutside))
@@ -176,9 +232,6 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
 const user = computed(() => userStore.loggedInUser)
 const language = computed(() => userStore.language)
 const sidebarCollapsed = computed(() => appStore.isSidebarCollapsed)
-// Unified token — same IAM token used across all portals
-const mmsToken = computed(() => localStorage.getItem('pickOne_token') || '')
-const currentLanguage = computed(() => userStore.language || 'en')
 
 // Profile picture
 const profilePictureUrl = computed(() => {
@@ -536,6 +589,80 @@ async function handleLogout() {
 
 .hdr-dropdown--profile {
   width: 240px;
+}
+
+.hdr-dropdown--notif {
+  width: 340px;
+  max-height: 420px;
+  display: flex;
+  flex-direction: column;
+}
+
+.hdr-notif-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #0f172a;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.hdr-notif-header-count {
+  min-width: 20px;
+  height: 20px;
+  padding: 0 7px;
+  border-radius: 10px;
+  background: rgba(0, 109, 75, 0.1);
+  color: #006d4b;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 20px;
+  text-align: center;
+}
+
+.hdr-notif-list {
+  overflow-y: auto;
+  flex: 1;
+}
+
+.hdr-notif-empty {
+  padding: 32px 16px;
+  text-align: center;
+  font-size: 13px;
+  color: #94a3b8;
+}
+
+.hdr-notif-item {
+  padding: 10px 16px;
+  border-bottom: 1px solid #f8fafc;
+  font-size: 13px;
+  color: #475569;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.hdr-notif-item:hover {
+  background: #f8fafc;
+}
+
+.hdr-notif-item--unread {
+  background: rgba(0, 109, 75, 0.03);
+  border-inline-start: 3px solid #006d4b;
+}
+
+.hdr-notif-item-title {
+  font-weight: 600;
+  color: #0f172a;
+  line-height: 1.35;
+}
+
+.hdr-notif-item-body {
+  font-size: 12px;
+  color: #94a3b8;
+  margin-top: 3px;
+  line-height: 1.4;
 }
 
 .hdr-dropdown-item {

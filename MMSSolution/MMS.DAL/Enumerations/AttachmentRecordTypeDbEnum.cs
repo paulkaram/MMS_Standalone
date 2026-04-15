@@ -11,5 +11,7 @@
         CommitteeCreation = 7,
 		CommitteeFile = 8,
 		Session = 9,
+		Bid = 10,
+		Procurement = 11,
 	}
 }

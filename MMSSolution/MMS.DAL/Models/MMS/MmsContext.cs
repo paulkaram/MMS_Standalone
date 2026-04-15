@@ -183,6 +183,23 @@ public partial class MmsContext : DbContext
 
     public virtual DbSet<BidStatusHistory> BidStatusHistory { get; set; }
 
+    public virtual DbSet<BidItemVision> BidItemVisions { get; set; }
+
+    public virtual DbSet<BidMinutesOpinion> BidMinutesOpinions { get; set; }
+
+    public virtual DbSet<BidItemType> BidItemTypes { get; set; }
+
+    public virtual DbSet<ProcurementProject> ProcurementProjects { get; set; }
+    public virtual DbSet<Competitor> Competitors { get; set; }
+    public virtual DbSet<CompetitorAttachment> CompetitorAttachments { get; set; }
+
+    public virtual DbSet<WorkflowTemplate> WorkflowTemplates { get; set; }
+    public virtual DbSet<WorkflowStep> WorkflowSteps { get; set; }
+    public virtual DbSet<WorkflowTransition> WorkflowTransitions { get; set; }
+    public virtual DbSet<WorkflowInstance> WorkflowInstances { get; set; }
+    public virtual DbSet<WorkflowTask> WorkflowTasks { get; set; }
+    public virtual DbSet<WorkflowHistory> WorkflowHistory { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<AccountType>(entity =>
@@ -1314,8 +1331,11 @@ public partial class MmsContext : DbContext
 
             entity.HasOne(d => d.ItemType).WithMany(p => p.CommitteeItems)
                 .HasForeignKey(d => d.ItemTypeId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_CommitteeItem_ItemType");
+
+            entity.HasOne(d => d.BidItemType).WithMany()
+                .HasForeignKey(d => d.BidItemTypeId)
+                .HasConstraintName("FK_CommitteeItem_BidItemType");
 
             entity.HasOne(d => d.RelatedItem).WithMany(p => p.InverseRelatedItem)
                 .HasForeignKey(d => d.RelatedItemId)
@@ -1473,6 +1493,146 @@ public partial class MmsContext : DbContext
                 .HasForeignKey(d => d.ChangedBy)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_BidStatusHistory_User");
+        });
+
+        modelBuilder.Entity<BidItemType>(entity =>
+        {
+            entity.ToTable("BidItemType");
+            entity.Property(e => e.NameAr).HasMaxLength(100);
+            entity.Property(e => e.NameEn).HasMaxLength(100);
+        });
+
+        modelBuilder.Entity<ProcurementProject>(entity =>
+        {
+            entity.ToTable("ProcurementProject");
+            entity.Property(e => e.CreatedDate).HasDefaultValueSql("(sysutcdatetime())").HasColumnType("datetime2");
+            entity.Property(e => e.UpdatedDate).HasColumnType("datetime2");
+            entity.Property(e => e.MeetingDate).HasColumnType("datetime2");
+            entity.Property(e => e.EstimatedValue).HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.AttachmentMode).HasDefaultValue(1);
+            entity.Property(e => e.StatusId).HasDefaultValue(1);
+
+            entity.HasOne(d => d.ProjectManager).WithMany().HasForeignKey(d => d.ProjectManagerUserId).HasConstraintName("FK_PP_Manager");
+            entity.HasOne(d => d.Committee).WithMany().HasForeignKey(d => d.CommitteeId).HasConstraintName("FK_PP_Committee");
+            entity.HasOne(d => d.CreatedByNavigation).WithMany().HasForeignKey(d => d.CreatedBy).OnDelete(DeleteBehavior.ClientSetNull).HasConstraintName("FK_PP_CreatedBy");
+        });
+
+        modelBuilder.Entity<Competitor>(entity =>
+        {
+            entity.ToTable("Competitor");
+            entity.Property(e => e.CreatedDate).HasDefaultValueSql("(sysutcdatetime())").HasColumnType("datetime2");
+            entity.Property(e => e.FinancialValue).HasColumnType("decimal(18, 2)");
+            entity.HasOne(d => d.Project).WithMany(p => p.Competitors).HasForeignKey(d => d.ProjectId).OnDelete(DeleteBehavior.Cascade).HasConstraintName("FK_C_Project");
+        });
+
+        modelBuilder.Entity<CompetitorAttachment>(entity =>
+        {
+            entity.ToTable("CompetitorAttachment");
+            entity.HasOne(d => d.Competitor).WithMany(p => p.Attachments).HasForeignKey(d => d.CompetitorId).OnDelete(DeleteBehavior.Cascade).HasConstraintName("FK_CA_Competitor");
+            entity.HasOne(d => d.Attachment).WithMany().HasForeignKey(d => d.AttachmentId).OnDelete(DeleteBehavior.NoAction).HasConstraintName("FK_CA_Attachment");
+        });
+
+        modelBuilder.Entity<BidMinutesOpinion>(entity =>
+        {
+            entity.ToTable("BidMinutesOpinion");
+            entity.Property(e => e.StatusId).HasDefaultValue(1);
+            entity.Property(e => e.CreatedDate).HasDefaultValueSql("(sysutcdatetime())").HasColumnType("datetime2");
+            entity.Property(e => e.SubmittedDate).HasColumnType("datetime2");
+            entity.Property(e => e.UpdatedDate).HasColumnType("datetime2");
+
+            entity.HasOne(d => d.Bid).WithMany().HasForeignKey(d => d.BidId).OnDelete(DeleteBehavior.Cascade).HasConstraintName("FK_BMO_Bid");
+            entity.HasOne(d => d.StakeholderUser).WithMany().HasForeignKey(d => d.StakeholderUserId).HasConstraintName("FK_BMO_User");
+            entity.HasOne(d => d.ExternalMember).WithMany().HasForeignKey(d => d.ExternalMemberId).HasConstraintName("FK_BMO_Ext");
+        });
+
+        modelBuilder.Entity<WorkflowTemplate>(entity =>
+        {
+            entity.ToTable("WorkflowTemplate");
+            entity.Property(e => e.CreatedDate).HasDefaultValueSql("(sysutcdatetime())").HasColumnType("datetime2");
+            entity.Property(e => e.UpdatedDate).HasColumnType("datetime2");
+            entity.HasOne(d => d.Committee).WithMany().HasForeignKey(d => d.CommitteeId).HasConstraintName("FK_WT_Committee");
+            entity.HasOne(d => d.CreatedByNavigation).WithMany().HasForeignKey(d => d.CreatedBy).OnDelete(DeleteBehavior.ClientSetNull).HasConstraintName("FK_WT_CreatedBy");
+        });
+
+        modelBuilder.Entity<WorkflowStep>(entity =>
+        {
+            entity.ToTable("WorkflowStep");
+            entity.HasOne(d => d.Template).WithMany(p => p.Steps).HasForeignKey(d => d.TemplateId).OnDelete(DeleteBehavior.Cascade).HasConstraintName("FK_WS_Template");
+            entity.HasOne(d => d.LegacyBidStatus).WithMany().HasForeignKey(d => d.LegacyBidStatusId).HasConstraintName("FK_WS_LegacyStatus");
+        });
+
+        modelBuilder.Entity<WorkflowTransition>(entity =>
+        {
+            entity.ToTable("WorkflowTransition");
+            entity.HasOne(d => d.Template).WithMany(p => p.Transitions).HasForeignKey(d => d.TemplateId).OnDelete(DeleteBehavior.Cascade).HasConstraintName("FK_WTr_Template");
+            entity.HasOne(d => d.FromStep).WithMany().HasForeignKey(d => d.FromStepId).OnDelete(DeleteBehavior.NoAction).HasConstraintName("FK_WTr_From");
+            entity.HasOne(d => d.ToStep).WithMany().HasForeignKey(d => d.ToStepId).OnDelete(DeleteBehavior.NoAction).HasConstraintName("FK_WTr_To");
+        });
+
+        modelBuilder.Entity<WorkflowInstance>(entity =>
+        {
+            entity.ToTable("WorkflowInstance");
+            entity.HasIndex(e => e.BidId).IsUnique();
+            entity.Property(e => e.StartedDate).HasDefaultValueSql("(sysutcdatetime())").HasColumnType("datetime2");
+            entity.Property(e => e.CompletedDate).HasColumnType("datetime2");
+            entity.HasOne(d => d.Template).WithMany().HasForeignKey(d => d.TemplateId).OnDelete(DeleteBehavior.ClientSetNull).HasConstraintName("FK_WI_Template");
+            entity.HasOne(d => d.Bid).WithOne(p => p.WorkflowInstance!).HasForeignKey<WorkflowInstance>(d => d.BidId).OnDelete(DeleteBehavior.Cascade).HasConstraintName("FK_WI_Bid");
+            entity.HasOne(d => d.CurrentStep).WithMany().HasForeignKey(d => d.CurrentStepId).OnDelete(DeleteBehavior.ClientSetNull).HasConstraintName("FK_WI_Step");
+            entity.HasOne(d => d.StartedByNavigation).WithMany().HasForeignKey(d => d.StartedBy).OnDelete(DeleteBehavior.ClientSetNull).HasConstraintName("FK_WI_StartedBy");
+        });
+
+        modelBuilder.Entity<WorkflowTask>(entity =>
+        {
+            entity.ToTable("WorkflowTask");
+            entity.Property(e => e.StatusId).HasDefaultValue(1);
+            entity.Property(e => e.CreatedDate).HasDefaultValueSql("(sysutcdatetime())").HasColumnType("datetime2");
+            entity.Property(e => e.DueDate).HasColumnType("datetime2");
+            entity.Property(e => e.ClaimedDate).HasColumnType("datetime2");
+            entity.Property(e => e.CompletedDate).HasColumnType("datetime2");
+            entity.HasOne(d => d.Instance).WithMany(p => p.Tasks).HasForeignKey(d => d.InstanceId).OnDelete(DeleteBehavior.Cascade).HasConstraintName("FK_WTk_Instance");
+            entity.HasOne(d => d.Step).WithMany().HasForeignKey(d => d.StepId).OnDelete(DeleteBehavior.NoAction).HasConstraintName("FK_WTk_Step");
+            entity.HasOne(d => d.AssignedTo).WithMany().HasForeignKey(d => d.AssignedToUserId).OnDelete(DeleteBehavior.ClientSetNull).HasConstraintName("FK_WTk_Assignee");
+            entity.HasOne(d => d.CompletedByNavigation).WithMany().HasForeignKey(d => d.CompletedBy).HasConstraintName("FK_WTk_CompletedBy");
+        });
+
+        modelBuilder.Entity<WorkflowHistory>(entity =>
+        {
+            entity.ToTable("WorkflowHistory");
+            entity.Property(e => e.ChangedDate).HasDefaultValueSql("(sysutcdatetime())").HasColumnType("datetime2");
+            entity.HasOne(d => d.Instance).WithMany(p => p.History).HasForeignKey(d => d.InstanceId).OnDelete(DeleteBehavior.Cascade).HasConstraintName("FK_WH_Instance");
+            entity.HasOne(d => d.FromStep).WithMany().HasForeignKey(d => d.FromStepId).OnDelete(DeleteBehavior.NoAction).HasConstraintName("FK_WH_From");
+            entity.HasOne(d => d.ToStep).WithMany().HasForeignKey(d => d.ToStepId).OnDelete(DeleteBehavior.NoAction).HasConstraintName("FK_WH_To");
+            entity.HasOne(d => d.Transition).WithMany().HasForeignKey(d => d.TransitionId).HasConstraintName("FK_WH_Transition");
+            entity.HasOne(d => d.ChangedByNavigation).WithMany().HasForeignKey(d => d.ChangedBy).OnDelete(DeleteBehavior.ClientSetNull).HasConstraintName("FK_WH_ChangedBy");
+        });
+
+        modelBuilder.Entity<BidItemVision>(entity =>
+        {
+            entity.ToTable("BidItemVision");
+            entity.Property(e => e.StatusId).HasDefaultValue(1);
+            entity.Property(e => e.CreatedDate)
+                .HasDefaultValueSql("(sysutcdatetime())")
+                .HasColumnType("datetime2");
+            entity.Property(e => e.SubmittedDate).HasColumnType("datetime2");
+            entity.Property(e => e.UpdatedDate).HasColumnType("datetime2");
+
+            entity.HasOne(d => d.Bid).WithMany()
+                .HasForeignKey(d => d.BidId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("FK_BidItemVision_Bid");
+
+            entity.HasOne(d => d.BidItem).WithMany()
+                .HasForeignKey(d => d.BidItemId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_BidItemVision_BidItem");
+
+            entity.HasOne(d => d.StakeholderUser).WithMany()
+                .HasForeignKey(d => d.StakeholderUserId)
+                .HasConstraintName("FK_BidItemVision_User");
+
+            entity.HasOne(d => d.ExternalMember).WithMany()
+                .HasForeignKey(d => d.ExternalMemberId)
+                .HasConstraintName("FK_BidItemVision_ExtMember");
         });
 
         OnModelCreatingPartial(modelBuilder);

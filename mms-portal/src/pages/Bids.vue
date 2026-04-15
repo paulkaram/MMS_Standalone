@@ -35,14 +35,25 @@
         <Icon icon="mdi:magnify" class="w-4 h-4" />
         <input v-model="search" type="text" :placeholder="$t('SearchBids')" />
       </div>
-      <select v-model="committeeFilter" class="filter-select">
-        <option :value="0">{{ $t('AllCommittees') }}</option>
-        <option v-for="c in committeeOptions" :key="c.id" :value="c.id">{{ c.name }}</option>
-      </select>
-      <select v-model="statusFilter" class="filter-select">
-        <option :value="0">{{ $t('AllStatuses') }}</option>
-        <option v-for="s in statusOptions" :key="s.id" :value="s.id">{{ localizedStatus(s) }}</option>
-      </select>
+      <CustomSelect
+        v-model="committeeFilter"
+        :options="committeeFilterOptions"
+        value-key="id"
+        label-key="name"
+        :placeholder="$t('AllCommittees')"
+        searchable
+        size="small"
+        class="toolbar-select"
+      />
+      <CustomSelect
+        v-model="statusFilter"
+        :options="statusFilterOptions"
+        value-key="id"
+        label-key="name"
+        :placeholder="$t('AllStatuses')"
+        size="small"
+        class="toolbar-select"
+      />
       <span class="result-count">{{ filteredBids.length }} / {{ bids.length }}</span>
     </div>
 
@@ -126,10 +137,15 @@
       <form class="bid-form" @submit.prevent="saveBid">
         <div class="form-field">
           <label>{{ $t('Committee') }} <span class="required">*</span></label>
-          <select v-model.number="form.committeeId" class="form-input" required>
-            <option :value="0" disabled>{{ $t('SelectCommittee') || $t('Select') }}</option>
-            <option v-for="c in committeeOptions" :key="c.id" :value="c.id">{{ c.name }}</option>
-          </select>
+          <CustomSelect
+            v-model="form.committeeId"
+            :options="committeeOptions"
+            value-key="id"
+            label-key="name"
+            :placeholder="$t('SelectCommittee') || $t('Select')"
+            searchable
+            required
+          />
         </div>
 
         <div class="form-field">
@@ -144,21 +160,35 @@
           </div>
           <div class="form-field">
             <label>{{ $t('TeamLeader') }}</label>
-            <select v-model="form.teamLeaderUserId" class="form-input">
-              <option :value="null">-</option>
-              <option v-for="u in users" :key="u.id" :value="u.id">{{ u.name }}</option>
-            </select>
+            <CustomSelect
+              v-model="form.teamLeaderUserId"
+              :options="users"
+              value-key="id"
+              label-key="name"
+              :placeholder="$t('Select') || '-'"
+              searchable
+              clearable
+            />
           </div>
         </div>
 
         <div class="form-row">
           <div class="form-field">
             <label>{{ $t('StartDate') }} <span class="required">*</span></label>
-            <input v-model="form.startDate" type="date" class="form-input" required />
+            <DatePicker
+              v-model="form.startDate"
+              :placeholder="$t('StartDate')"
+              required
+            />
           </div>
           <div class="form-field">
             <label>{{ $t('DueDate') }} <span class="required">*</span></label>
-            <input v-model="form.dueDate" type="date" class="form-input" required />
+            <DatePicker
+              v-model="form.dueDate"
+              :min-date="form.startDate || undefined"
+              :placeholder="$t('DueDate')"
+              required
+            />
           </div>
         </div>
 
@@ -177,13 +207,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import PageHeader from '@/components/layout/PageHeader.vue'
 import Icon from '@/components/ui/Icon.vue'
 import Modal from '@/components/ui/Modal.vue'
+import CustomSelect from '@/components/ui/CustomSelect.vue'
+import DatePicker from '@/components/ui/DatePicker.vue'
 import BidsService, { type Bid, type BidPost, type BidStatusDto, BidStatus } from '@/services/BidsService'
-import UsersService from '@/services/UsersService'
 import CouncilCommitteesService from '@/services/CouncilCommitteesService'
 import { useToast } from '@/composables/useToast'
 import { useI18n } from 'vue-i18n'
@@ -211,7 +242,13 @@ const statusFilter = ref(0)
 const overdueOnly = ref(false)
 const showCompleted = ref(true)
 
-const emptyForm = (): BidPost => ({
+// Form type — date fields accept Date from DatePicker or string from initial value
+type BidFormModel = Omit<BidPost, 'startDate' | 'dueDate'> & {
+  startDate: string | Date | null
+  dueDate: string | Date | null
+}
+
+const emptyForm = (): BidFormModel => ({
   committeeId: 0,
   externalMeetingNumber: null,
   subject: '',
@@ -222,7 +259,18 @@ const emptyForm = (): BidPost => ({
   stakeholders: []
 })
 
-const form = reactive<BidPost>(emptyForm())
+const form = reactive<BidFormModel>(emptyForm())
+
+// Normalize a Date|string|null to YYYY-MM-DD for the backend
+const toIsoDate = (v: string | Date | null | undefined): string => {
+  if (!v) return ''
+  const d = v instanceof Date ? v : new Date(v)
+  if (isNaN(d.getTime())) return ''
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
+}
 
 const completedCount = computed(() => bids.value.filter(b => b.statusId === BidStatus.Completed).length)
 const overdueCount = computed(() => bids.value.filter(b => b.isOverdue).length)
@@ -257,6 +305,16 @@ const filteredBids = computed(() => {
 
 const localizedStatus = (s: BidStatusDto) => isRtl.value ? s.nameAr : s.nameEn
 
+const committeeFilterOptions = computed(() => [
+  { id: 0, name: t('AllCommittees') },
+  ...committeeOptions.value
+])
+
+const statusFilterOptions = computed(() => [
+  { id: 0, name: t('AllStatuses') },
+  ...statusOptions.value.map(s => ({ id: s.id, name: localizedStatus(s) }))
+])
+
 const load = async () => {
   loading.value = true
   try {
@@ -286,9 +344,15 @@ const loadCommittees = async () => {
   }
 }
 
-const loadUsers = async () => {
+/**
+ * Loads member picker options for the currently-selected committee.
+ * Called whenever form.committeeId changes — scopes team-leader and
+ * stakeholder choices to actual committee members (not every user in the system).
+ */
+const loadUsersForCommittee = async (committeeId: number) => {
+  if (!committeeId || committeeId <= 0) { users.value = []; return }
   try {
-    const res: any = await UsersService.searchUsers('')
+    const res: any = await BidsService.listCommitteeMembersForPicker(committeeId)
     users.value = (res?.data ?? res ?? []).map((u: any) => ({ id: String(u.id), name: u.name }))
   } catch {
     users.value = []
@@ -308,10 +372,24 @@ const saveBid = async () => {
   if (!form.subject.trim() || !form.committeeId) return
   saving.value = true
   try {
-    await BidsService.create(form)
+    const payload: BidPost = {
+      ...form,
+      startDate: toIsoDate(form.startDate),
+      dueDate: toIsoDate(form.dueDate)
+    }
+    const res: any = await BidsService.create(payload)
     toast.success(t('BidCreatedSuccessfully'))
     modalOpen.value = false
-    await load()
+
+    // Route the creator straight to the bid detail so they can add items,
+    // stakeholders, and attachments — no redundant "task" to do their own bid.
+    const created = res?.data ?? res
+    const newId = created?.id ?? created?.Id
+    if (newId) {
+      router.push(`/bids/${newId}`)
+    } else {
+      await load()
+    }
   } catch (err: any) {
     toast.error(err?.response?.data?.message || t('ErrorOccured'))
   } finally {
@@ -342,10 +420,13 @@ const formatDate = (iso: string): string => {
   return new Date(iso).toLocaleDateString()
 }
 
+// When the user picks a committee in the Add-Bid modal, reload the
+// member picker so team-leader/stakeholder choices are scoped to that committee.
+watch(() => form.committeeId, (cid) => { loadUsersForCommittee(cid) })
+
 onMounted(() => {
   load()
   loadCommittees()
-  loadUsers()
 })
 </script>
 
@@ -449,16 +530,8 @@ onMounted(() => {
   color: #1a2e25;
   flex: 1;
 }
-.filter-select {
-  padding: 6px 10px;
-  border: 1px solid #d4e0da;
-  border-radius: 8px;
-  background: #f7faf8;
-  font-size: 12px;
-  color: #1a2e25;
-  font-family: inherit;
-  cursor: pointer;
-}
+.toolbar-select { min-width: 180px; }
+.toolbar-select :deep(.custom-select-wrapper) { margin: 0; }
 .result-count {
   font-size: 12px;
   color: #6b8a7d;

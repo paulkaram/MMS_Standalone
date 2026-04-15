@@ -47,4 +47,6 @@ public partial class Bid
     public virtual ICollection<BidStatusHistory> StatusHistory { get; set; } = new List<BidStatusHistory>();
 
     public virtual ICollection<CommitteeItem> Items { get; set; } = new List<CommitteeItem>();
+
+    public virtual WorkflowInstance? WorkflowInstance { get; set; }
 }

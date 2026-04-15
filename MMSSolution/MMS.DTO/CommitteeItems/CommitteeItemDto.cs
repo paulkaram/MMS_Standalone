@@ -15,6 +15,9 @@ namespace MMS.DTO.CommitteeItems
         public string? RelatedItemReferenceNumber { get; set; }
         public bool IsPrivate { get; set; }
         public int Order { get; set; }
+        public DateTime? DueDate { get; set; }
+        public int? BidItemTypeId { get; set; }
+        public string? BidItemTypeName { get; set; }
         public string CreatedBy { get; set; } = null!;
         public string? CreatedByName { get; set; }
         public DateTime CreatedDate { get; set; }

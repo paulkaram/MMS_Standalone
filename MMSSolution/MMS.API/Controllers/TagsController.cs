@@ -34,6 +34,20 @@ namespace MMS.API.Controllers
             }
         }
 
+        [HttpGet("picker")]
+        public async Task<IActionResult> ListForPicker()
+        {
+            try
+            {
+                var tags = await _tagManager.ListForPickerAsync(Language);
+                return Ok(new ApiResponseDto<List<TagPickerDto>>(tags));
+            }
+            catch (Exception ex)
+            {
+                return ErrorResponse(ex);
+            }
+        }
+
         [HttpGet("admin")]
         [RequiredPermission(PermissionDbEnum.Lookups, PermissionLevelDbEnum.Read)]
         public async Task<IActionResult> ListAdmin()
@@ -65,7 +79,7 @@ namespace MMS.API.Controllers
             }
         }
 
-        [HttpPut("{id}")]
+        [HttpPut("{id:int}")]
         [RequiredPermission(PermissionDbEnum.Lookups, PermissionLevelDbEnum.Write)]
         [LogUserActivity(AuditOperationConstants.Update, "Updated tag {id}")]
         public async Task<IActionResult> Update(int id, [FromBody] TagPostDto dto)
@@ -83,7 +97,7 @@ namespace MMS.API.Controllers
             }
         }
 
-        [HttpDelete("{id}")]
+        [HttpDelete("{id:int}")]
         [RequiredPermission(PermissionDbEnum.Lookups, PermissionLevelDbEnum.Write)]
         [LogUserActivity(AuditOperationConstants.Delete, "Deleted tag {id}")]
         public async Task<IActionResult> Delete(int id)

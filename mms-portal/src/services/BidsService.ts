@@ -120,6 +120,11 @@ const BidsService = {
     return axios.put(`bids/${id}`, dto)
   },
 
+  /** Patch only the description field — used by the inline-edit on BidDetail. */
+  updateDescription(id: number, description: string | null): Promise<boolean> {
+    return axios.patch(`bids/${id}/description`, { description })
+  },
+
   delete(id: number): Promise<void> {
     return axios.delete(`bids/${id}`)
   },
@@ -130,7 +135,116 @@ const BidsService = {
 
   allowedNextStatuses(id: number): Promise<number[]> {
     return axios.get(`bids/${id}/allowed-next-statuses`)
+  },
+
+  // ─────── Committee member picker (scoped to the bid's committee) ───────
+  listCommitteeMembersForPicker(committeeId: number): Promise<{ id: string; name: string }[]> {
+    return axios.get(`bids/committee/${committeeId}/member-picker`)
+  },
+
+  listItemTypes(): Promise<{ id: string; name: string }[]> {
+    return axios.get('bids/item-types')
+  },
+
+  listRelatableItems(bidId: number): Promise<{ id: string; name: string }[]> {
+    return axios.get(`bids/${bidId}/relatable-items`)
+  },
+
+  listExternalMembersForPicker(committeeId: number): Promise<{ id: string; name: string }[]> {
+    return axios.get(`bids/committee/${committeeId}/external-members-picker`)
+  },
+
+  // ─────── Stakeholders ───────
+  listStakeholders(bidId: number): Promise<BidStakeholder[]> {
+    return axios.get(`bids/${bidId}/stakeholders`)
+  },
+  addStakeholder(bidId: number, dto: BidStakeholderPost): Promise<BidStakeholder> {
+    return axios.post(`bids/${bidId}/stakeholders`, dto)
+  },
+  removeStakeholder(stakeholderId: number): Promise<boolean> {
+    return axios.delete(`bids/stakeholders/${stakeholderId}`)
+  },
+
+  // ─────── Bid attachments (§5.6) ───────
+  listAttachments(bidId: number): Promise<BidAttachment[]> {
+    return axios.get(`bids/${bidId}/attachments`)
+  },
+  uploadAttachments(bidId: number, files: File[], privacyId = 1): Promise<BidAttachment[]> {
+    const fd = new FormData()
+    for (const f of files) fd.append('files', f)
+    return axios.post(`bids/${bidId}/attachments?privacyId=${privacyId}`, fd, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    })
+  },
+  deleteAttachment(attachmentId: number): Promise<boolean> {
+    return axios.delete(`bids/attachments/${attachmentId}`)
+  },
+
+  // ─────── Bid items (no item type — see §5.6/§5.7 split) ───────
+  addItem(bidId: number, dto: BidItemPost): Promise<BidItem> {
+    return axios.post(`bids/${bidId}/items`, dto)
+  },
+  updateItem(itemId: number, dto: BidItemPost): Promise<BidItem> {
+    return axios.put(`bids/items/${itemId}`, dto)
+  },
+  deleteItem(itemId: number): Promise<boolean> {
+    return axios.delete(`bids/items/${itemId}`)
   }
+}
+
+export interface BidItem {
+  id: number
+  referenceNumber: string
+  externalReferenceNumber?: string | null
+  content: string
+  internalNote?: string | null
+  order: number
+  dueDate?: string | null
+  itemTypeId?: number | null
+  itemTypeName?: string | null
+  bidItemTypeId?: number | null
+  bidItemTypeName?: string | null
+  relatedItemId?: number | null
+  relatedItemReferenceNumber?: string | null
+  tagList?: { id: string; name: string }[]
+}
+
+export interface BidItemPost {
+  referenceNumber: string
+  externalReferenceNumber?: string | null
+  content: string
+  internalNote?: string | null
+  order: number
+  dueDate?: string | Date | null
+  bidItemTypeId?: number | null     // procurement classification (§5.11)
+  itemTypeId?: number | null        // agenda-style type (§5.7 line 223)
+  relatedItemId?: number | null     // §5.7 line 224
+  tagIds?: number[]                 // §5.7 line 225 — multiple tags
+}
+
+export interface BidStakeholder {
+  id: number
+  bidId: number
+  userId?: string | null
+  externalMemberId?: number | null
+  name: string
+  email?: string | null
+  isTeamLeader: boolean
+  isExternal: boolean
+}
+
+export interface BidAttachment {
+  id: number
+  name: string
+  type: string
+  size: number
+  recordId: number
+  recordTypeId: number
+  privacyId: number
+  privacyName: string
+  recordTypeName: string
+  version: number
+  createdDate?: string | null
 }
 
 export default BidsService

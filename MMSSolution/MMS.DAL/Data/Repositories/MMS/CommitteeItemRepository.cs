@@ -17,6 +17,7 @@ namespace MMS.DAL.Data.Repositories.MMS
         {
             return await ContextAsMMSContext.Set<CommitteeItem>()
                 .Include(i => i.ItemType)
+                .Include(i => i.BidItemType)
                 .Include(i => i.Committee)
                 .Include(i => i.RelatedItem)
                 .Include(i => i.CreatedByNavigation)
@@ -28,6 +29,7 @@ namespace MMS.DAL.Data.Repositories.MMS
         {
             return await ContextAsMMSContext.Set<CommitteeItem>()
                 .Include(i => i.ItemType)
+                .Include(i => i.BidItemType)
                 .Include(i => i.RelatedItem)
                 .Include(i => i.CreatedByNavigation)
                 .Where(filter)

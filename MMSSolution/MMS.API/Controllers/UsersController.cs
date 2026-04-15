@@ -353,7 +353,7 @@ namespace MMS.API.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> ListUsers(string search, bool active = true, SearchTypeEnum mode = SearchTypeEnum.List)
+        public async Task<IActionResult> ListUsers(string? search = null, bool active = true, SearchTypeEnum mode = SearchTypeEnum.List)
         {
             try
             {
@@ -364,7 +364,7 @@ namespace MMS.API.Controllers
                         users = await _userManagementManager.ListUsers(Language);
                         break;
                     case SearchTypeEnum.Autocomplete:
-                        users = await _userManagementManager.ListUsersForAutoComplete(search, Language, active);
+                        users = await _userManagementManager.ListUsersForAutoComplete(search ?? string.Empty, Language, active);
                         break;
                     default:
                         break;

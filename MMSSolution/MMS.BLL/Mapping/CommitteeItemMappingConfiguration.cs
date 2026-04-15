@@ -28,6 +28,11 @@ namespace MMS.BLL.Mapping
                     : null)
                 .Map(dest => dest.IsPrivate, src => src.item.IsPrivate)
                 .Map(dest => dest.Order, src => src.item.Order)
+                .Map(dest => dest.DueDate, src => src.item.DueDate)
+                .Map(dest => dest.BidItemTypeId, src => src.item.BidItemTypeId)
+                .Map(dest => dest.BidItemTypeName, src => src.item.BidItemType != null
+                    ? (src.Language == LanguageDbEnum.Arabic ? src.item.BidItemType.NameAr : src.item.BidItemType.NameEn)
+                    : null)
                 .Map(dest => dest.CreatedBy, src => src.item.CreatedBy)
                 .Map(dest => dest.CreatedByName, src => src.item.CreatedByNavigation != null
                     ? (src.Language == LanguageDbEnum.Arabic ? src.item.CreatedByNavigation.FullnameAr : src.item.CreatedByNavigation.FullnameEn)

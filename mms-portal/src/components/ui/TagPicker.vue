@@ -1,5 +1,5 @@
 <template>
-  <div class="tag-picker" :class="{ disabled }">
+  <div ref="rootEl" class="tag-picker" :class="{ disabled }">
     <div v-if="selectedTags.length > 0" class="selected-tags">
       <span
         v-for="tag in selectedTags"
@@ -57,7 +57,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
 import Icon from '@/components/ui/Icon.vue'
-import TagsService, { type TagListItem, type Tag } from '@/services/TagsService'
+import TagsService, { type TagPickerItem } from '@/services/TagsService'
 
 interface Props {
   modelValue: number[]
@@ -68,42 +68,35 @@ const props = withDefaults(defineProps<Props>(), {
 })
 const emit = defineEmits<{ 'update:modelValue': [value: number[]] }>()
 
-const allTagsFull = ref<Tag[]>([])
-const availableTags = ref<TagListItem[]>([])
+const rootEl = ref<HTMLElement | null>(null)
+const availableTags = ref<TagPickerItem[]>([])
 const dropdownOpen = ref(false)
 const filter = ref('')
 
-const selectedTags = computed<TagListItem[]>(() =>
+const selectedTags = computed<TagPickerItem[]>(() =>
   availableTags.value.filter(t => props.modelValue.includes(t.id))
 )
 
-const filteredAvailableTags = computed<TagListItem[]>(() => {
+const filteredAvailableTags = computed<TagPickerItem[]>(() => {
   const unselected = availableTags.value.filter(t => !props.modelValue.includes(t.id))
   if (!filter.value) return unselected
   const q = filter.value.toLowerCase()
   return unselected.filter(t => t.name.toLowerCase().includes(q))
 })
 
-const tagColor = (tag: TagListItem): string => {
-  const full = allTagsFull.value.find(t => t.id === tag.id)
-  return full?.color || '#006d4b'
-}
+const tagColor = (tag: TagPickerItem): string => tag.color || '#006d4b'
 
 const loadTags = async () => {
   try {
-    // load both typed (for color) and list (localized)
-    const [adminRes, listRes]: any = await Promise.all([
-      TagsService.listAdmin().catch(() => null),
-      TagsService.list()
-    ])
-    allTagsFull.value = adminRes?.data ?? adminRes ?? []
-    availableTags.value = listRes?.data ?? listRes ?? []
+    // Single endpoint that returns localized name + color, no permission gate
+    const res: any = await TagsService.listForPicker()
+    availableTags.value = res?.data ?? res ?? []
   } catch (err) {
     console.error('Failed to load tags:', err)
   }
 }
 
-const addTag = (tag: TagListItem) => {
+const addTag = (tag: TagPickerItem) => {
   if (!props.modelValue.includes(tag.id)) {
     emit('update:modelValue', [...props.modelValue, tag.id])
   }
@@ -120,24 +113,35 @@ const toggleDropdown = () => {
   filter.value = ''
 }
 
-const handleClickOutside = (e: MouseEvent) => {
-  const target = e.target as HTMLElement
-  if (!target.closest('.tag-picker')) {
-    dropdownOpen.value = false
-  }
+/**
+ * Click-outside detection. We listen on BOTH mousedown and click in capture
+ * phase — mousedown for snappiness, click as a fallback in case some parent
+ * (e.g. Headless UI's Dialog) intercepts mousedown. composedPath() walks
+ * through shadow DOM / teleported portals so the containment check holds
+ * even when the dropdown sits in a different DOM subtree than rootEl.
+ */
+const handleOutside = (e: Event) => {
+  if (!dropdownOpen.value || !rootEl.value) return
+  const path = (typeof (e as any).composedPath === 'function' ? (e as any).composedPath() : []) as EventTarget[]
+  const target = e.target as Node | null
+  const inside =
+    path.includes(rootEl.value) ||
+    (target !== null && rootEl.value.contains(target))
+  if (!inside) dropdownOpen.value = false
 }
 
 onMounted(() => {
   loadTags()
-  document.addEventListener('click', handleClickOutside)
+  document.addEventListener('mousedown', handleOutside, true)
+  document.addEventListener('click', handleOutside, true)
 })
 
 onBeforeUnmount(() => {
-  document.removeEventListener('click', handleClickOutside)
+  document.removeEventListener('mousedown', handleOutside, true)
+  document.removeEventListener('click', handleOutside, true)
 })
 
 watch(() => props.modelValue, () => {
-  // ensure we have latest tags to render
   if (availableTags.value.length === 0) loadTags()
 })
 </script>

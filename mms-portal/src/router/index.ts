@@ -81,6 +81,7 @@ const Departments = () => import('@/pages/Admin/Departments.vue')
 const ManagePrivileges = () => import('@/pages/Admin/ManagePrivileges.vue')
 const DataSources = () => import('@/pages/Admin/DataSources.vue')
 const WorkflowDesigner = () => import('@/pages/Admin/Case/WorkflowDesigner.vue')
+const BidWorkflowDesigner = () => import('@/pages/Admin/WorkflowDesigner.vue')
 const Apps = () => import('@/pages/Admin/Case/Apps.vue')
 const Roles = () => import('@/pages/Admin/Roles.vue')
 const AuditTrail = () => import('@/pages/Admin/AuditTrail.vue')
@@ -338,6 +339,12 @@ const routes: RouteRecordRaw[] = [
     name: 'workflow-designer',
     path: '/workflow-designer',
     component: WorkflowDesigner,
+    meta: { secure: true, permission: 'admin' }
+  },
+  {
+    name: 'bid-workflow-designer',
+    path: '/admin/bid-workflows',
+    component: BidWorkflowDesigner,
     meta: { secure: true, permission: 'admin' }
   },
   {

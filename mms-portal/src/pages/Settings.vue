@@ -203,6 +203,17 @@ const allSettingsItems: SettingsItem[] = [
     permissionName: 'SystemSettings'
   },
   {
+    name: 'bid-workflows',
+    label: 'BidWorkflows',
+    fallback: 'سير عمل العروض',
+    descKey: 'WorkflowDesignerDesc',
+    descFallback: 'اضبط من ينفذ كل خطوة من خطوات العرض',
+    icon: 'mdi:transit-connection-variant',
+    iconClass: 'icon-navy',
+    to: '/admin/bid-workflows',
+    permissionName: 'ManageOrganization'
+  },
+  {
     name: 'outlook-integration',
     label: 'OutlookIntegration',
     fallback: 'تكامل Outlook',
